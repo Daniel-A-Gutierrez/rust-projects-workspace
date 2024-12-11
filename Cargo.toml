@@ -1,0 +1,4 @@
+[workspace]
+
+members = ["aoc-2024/day-10"]
+resolver = "2"
