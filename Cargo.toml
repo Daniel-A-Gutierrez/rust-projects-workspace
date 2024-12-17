@@ -1,4 +1,4 @@
 [workspace]
 
-members = ["aoc-2024/day-10", "aoc-2024/day-11"]
+members = ["aoc-2024/day-10", "aoc-2024/day-11", "aoc-2024/day-12"]
 resolver = "2"
