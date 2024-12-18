@@ -14,11 +14,19 @@ struct Plot
 
 type Regions = HashMap<(char, u32), Vec<Vec<(usize, usize)>>>;
 
-pub fn run() -> Result<()>
+pub fn part1() -> Result<()>
 {
     let matrix = load()?;
     let (regions, plots) = scan_regions(&matrix)?;
     println!("Total Cost : {}", calculate_cost(&regions, &plots));
+    return Ok(());
+}
+
+pub fn part2() -> Result<()>
+{
+    let matrix = load()?;
+    let (regions, plots) = scan_regions(&matrix)?;
+    //println!("Total Cost : {}", calculate_cost(&regions, &plots));
     let discounted_cost = calculate_discounted_cost(&regions, &plots, &matrix);
     println!("Discounted Cost : {}", discounted_cost);
     return Ok(());
@@ -130,7 +138,7 @@ fn scan_corners(matrix: &Array2<char>, region: &Vec<&(usize, usize)>) -> u64
                  bl(left, bottomleft, bottom),
                  br(right, bottomright, bottom)];
         let num_corners = c.iter().filter(|x| **x).count() as u64;
-        //log_grid[pos] = num_corners; 
+        //log_grid[pos] = num_corners;
         corners += num_corners;
     }
     //println!("{:?}"  , log_grid);
