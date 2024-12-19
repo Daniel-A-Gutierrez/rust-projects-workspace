@@ -36,7 +36,8 @@ pub fn part2() -> Result<()>
     //debug_solution(&map, &vec![]);
 
     println!("Dooming Byte Index: {:?}\nPosition: {:?}",
-             doom-1, (input[doom-1].1, input[doom-1].0));
+             doom - 1,
+             (input[doom - 1].1, input[doom - 1].0));
     return Ok(());
 }
 
@@ -80,12 +81,16 @@ fn debug_solution(map: &Array2<bool>, path: &Vec<(usize, usize)>)
                                                      })
                                                      .collect()).unwrap();
     path.iter().for_each(|e| pretty_map[*e] = 'O');
-    let [rows,cols] = pretty_map.shape() else {panic!("AAaah")};
-    for r in 0..*rows 
+    let [rows, cols] = pretty_map.shape()
+    else
     {
-        for c in 0..*cols 
+        panic!("AAaah")
+    };
+    for r in 0..*rows
+    {
+        for c in 0..*cols
         {
-            print!("{}", pretty_map[(r,c)])
+            print!("{}", pretty_map[(r, c)])
         }
         println!("");
     }

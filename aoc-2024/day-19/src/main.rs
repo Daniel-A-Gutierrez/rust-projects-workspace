@@ -7,20 +7,20 @@ fn main() -> Result<(), anyhow::Error>
 }
 
 #[cfg(test)]
-mod benchmarks 
+mod benchmarks
 {
     extern crate test;
-    use test::Bencher;
     use super::*;
+    use test::Bencher;
 
     #[bench]
-    fn bench_part1(b : &mut Bencher)
+    fn bench_part1(b: &mut Bencher)
     {
         b.iter(|| part1());
     }
-    
+
     #[bench]
-    fn bench_part2(b : &mut Bencher)
+    fn bench_part2(b: &mut Bencher)
     {
         b.iter(|| part2());
     }
