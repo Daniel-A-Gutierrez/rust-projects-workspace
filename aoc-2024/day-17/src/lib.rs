@@ -10,10 +10,13 @@ pub fn part1() -> Result<()>
     let mut r = pc.cycle();
     while r.is_ok()
     {
-        r = pc.cycle(); 
-        if pc.clock > 1000 {bail!("Clock > 1000");}
+        r = pc.cycle();
+        if pc.clock > 1000
+        {
+            bail!("Clock > 1000");
+        }
     }
-    println!("Output : {:?}" , pc.output);
+    println!("Output : {:?}", pc.output);
     println!("Exit Status : {:?}", r);
     return Ok(());
 }
@@ -30,19 +33,21 @@ pub fn brute_force() -> Result<()>
 {
     let pc = load_input();
 
-    (0..1_000_000_000).into_par_iter().for_each(|i|
-    {
-        let mut trial = pc.clone();
-        trial.rA = i;
-        while let Ok(_) = trial.cycle()
-        {
-            if pc.clock > 2500 {break;}
-        }
-        if(trial.output.starts_with(&trial.program))
-        {
-            println!("Solution found : {}", i);
-        }
-    });
+    (0..1_000_000_000).into_par_iter().for_each(|i| {
+                                          let mut trial = pc.clone();
+                                          trial.rA = i;
+                                          while let Ok(_) = trial.cycle()
+                                          {
+                                              if pc.clock > 2500
+                                              {
+                                                  break;
+                                              }
+                                          }
+                                          if (trial.output.starts_with(&trial.program))
+                                          {
+                                              println!("Solution found : {}", i);
+                                          }
+                                      });
     println!("Solution not found.");
     return Ok(());
 }
@@ -81,7 +86,7 @@ pub struct Computer
     instruction: usize,
     program:     Vec<u8>,
     clock:       u64,
-    output:      Vec<u8>
+    output:      Vec<u8>,
 }
 
 impl Computer
@@ -165,7 +170,10 @@ impl Computer
 
     pub fn jnz(&mut self, operand: i64)
     {
-        if(self.rA == 0) {return;}
+        if (self.rA == 0)
+        {
+            return;
+        }
         self.instruction = operand as usize;
     }
 
@@ -177,7 +185,7 @@ impl Computer
     pub fn out(&mut self, operand: i64)
     {
         //print!("{},", operand%8);
-        self.output.push(operand as u8 %8);
+        self.output.push(operand as u8 % 8);
     }
 
     pub fn bdv(&mut self, operand: i64)
