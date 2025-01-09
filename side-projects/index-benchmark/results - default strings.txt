@@ -1,0 +1,218 @@
+DEFAULT STRINGS
+
+Ram used generating 10000000 strings : 310001896 bytes
+BenchResult { subject: "B Tree Map", test: "insertion", size: 10000, mem: 722640, time: 1.326557183s }
+BenchResult { subject: "B Tree Map", test: "insertion", size: 100000, mem: 7219088, time: 10.659164ms }
+BenchResult { subject: "B Tree Map", test: "insertion", size: 1000000, mem: 72183568, time: 315.006852ms }
+BenchResult { subject: "B Tree Map", test: "insertion", size: 10000000, mem: 721820480, time: 5.083517725s }
+BenchResult { subject: "B Tree Map", test: "rand 10k", size: 10000, mem: 0, time: 895.985µs }
+BenchResult { subject: "B Tree Map", test: "rand 10k", size: 100000, mem: 0, time: 1.976735ms }
+BenchResult { subject: "B Tree Map", test: "rand 10k", size: 1000000, mem: 0, time: 6.519429ms }
+BenchResult { subject: "B Tree Map", test: "rand 10k", size: 10000000, mem: 0, time: 11.792852ms }
+BenchResult { subject: "B Tree Map", test: "sequential 100x100", size: 10000, mem: 0, time: 6.643µs }
+BenchResult { subject: "B Tree Map", test: "sequential 100x100", size: 100000, mem: 0, time: 11.532µs }
+BenchResult { subject: "B Tree Map", test: "sequential 100x100", size: 1000000, mem: 0, time: 20.428µs }
+BenchResult { subject: "B Tree Map", test: "sequential 100x100", size: 10000000, mem: 0, time: 26.61µs }
+BenchResult { subject: "Hash Map", test: "insertion", size: 10000, mem: 920688, time: 518.554µs }
+BenchResult { subject: "Hash Map", test: "insertion", size: 100000, mem: 8125392, time: 15.758303ms }
+BenchResult { subject: "Hash Map", test: "insertion", size: 1000000, mem: 107206032, time: 234.120124ms }
+BenchResult { subject: "Hash Map", test: "insertion", size: 10000000, mem: 933648144, time: 3.163050951s }
+BenchResult { subject: "Hash Map", test: "rand 10k", size: 10000, mem: 0, time: 164.626µs }
+BenchResult { subject: "Hash Map", test: "rand 10k", size: 100000, mem: 0, time: 810.346µs }
+BenchResult { subject: "Hash Map", test: "rand 10k", size: 1000000, mem: 0, time: 1.483588ms }
+BenchResult { subject: "Hash Map", test: "rand 10k", size: 10000000, mem: 0, time: 1.655297ms }
+BenchResult { subject: "No Index", test: "insertion", size: 10000, mem: 310000, time: 320.636µs }
+BenchResult { subject: "No Index", test: "insertion", size: 100000, mem: 3100000, time: 2.651309ms }
+BenchResult { subject: "No Index", test: "rand 10k", size: 10000, mem: 0, time: 89.890576ms }
+BenchResult { subject: "No Index", test: "rand 10k", size: 100000, mem: 0, time: 914.912531ms }
+BenchResult { subject: "No Index", test: "sequential 100x100", size: 10000, mem: 0, time: 3.372459ms }
+BenchResult { subject: "No Index", test: "sequential 100x100", size: 100000, mem: 0, time: 31.422711ms }
+BenchResult { subject: "Radix Trie Map", test: "insertion", size: 10000, mem: 4049616, time: 1.351322ms }
+BenchResult { subject: "Radix Trie Map", test: "insertion", size: 100000, mem: 42338240, time: 24.929752ms }
+BenchResult { subject: "Radix Trie Map", test: "insertion", size: 1000000, mem: 432770976, time: 482.723309ms }
+BenchResult { subject: "Radix Trie Map", test: "insertion", size: 10000000, mem: 4100786152, time: 9.165467176s }
+BenchResult { subject: "Radix Trie Map", test: "rand 10k", size: 10000, mem: 0, time: 868.274µs }
+BenchResult { subject: "Radix Trie Map", test: "rand 10k", size: 100000, mem: 0, time: 5.075104ms }
+BenchResult { subject: "Radix Trie Map", test: "rand 10k", size: 1000000, mem: 0, time: 7.866944ms }
+BenchResult { subject: "Radix Trie Map", test: "rand 10k", size: 10000000, mem: 0, time: 12.432551ms }
+BenchResult { subject: "Radix Trie Map", test: "sequential 100x100", size: 10000, mem: 0, time: 2.364µs }
+BenchResult { subject: "Radix Trie Map", test: "sequential 100x100", size: 100000, mem: 0, time: 5.57µs }
+BenchResult { subject: "Radix Trie Map", test: "sequential 100x100", size: 1000000, mem: 0, time: 13.165µs }
+BenchResult { subject: "Radix Trie Map", test: "sequential 100x100", size: 10000000, mem: 0, time: 12.823µs }
+BenchResult { subject: "Rudy Map", test: "insertion", size: 10000, mem: 19050328, time: 1.871579ms }
+BenchResult { subject: "Rudy Map", test: "insertion", size: 100000, mem: 76229848, time: 17.252581ms }
+BenchResult { subject: "Rudy Map", test: "insertion", size: 1000000, mem: 90211672, time: 174.212421ms }
+BenchResult { subject: "Rudy Map", test: "insertion", size: 10000000, mem: 162211672, time: 1.698301964s }
+BenchResult { subject: "Rudy Map", test: "rand 10k", size: 10000, mem: 0, time: 515.989µs }
+BenchResult { subject: "Rudy Map", test: "rand 10k", size: 100000, mem: 0, time: 654.767µs }
+BenchResult { subject: "Rudy Map", test: "rand 10k", size: 1000000, mem: 0, time: 1.068596ms }
+BenchResult { subject: "Rudy Map", test: "rand 10k", size: 10000000, mem: 0, time: 1.035494ms }
+
+
+INTERNED STRINGS
+Ram used generating 10000000 strings : 685219176 bytes
+BenchResult { subject: "B Tree Map", test: "insertion", size: 10000, mem: 422472, time: 1.506221ms }
+BenchResult { subject: "B Tree Map", test: "insertion", size: 100000, mem: 4218904, time: 16.092935ms }
+BenchResult { subject: "B Tree Map", test: "insertion", size: 1000000, mem: 42183224, time: 359.001447ms }
+BenchResult { subject: "B Tree Map", test: "insertion", size: 10000000, mem: 421820032, time: 5.393953391s }
+BenchResult { subject: "B Tree Map", test: "rand 10k", size: 10000, mem: 0, time: 1.049521ms }
+BenchResult { subject: "B Tree Map", test: "rand 10k", size: 100000, mem: 0, time: 2.396757ms }
+BenchResult { subject: "B Tree Map", test: "rand 10k", size: 1000000, mem: 0, time: 6.503654ms }
+BenchResult { subject: "B Tree Map", test: "rand 10k", size: 10000000, mem: 0, time: 10.770318ms }
+BenchResult { subject: "B Tree Map", test: "sequential 100x100", size: 10000, mem: 0, time: 6.392µs }
+BenchResult { subject: "B Tree Map", test: "sequential 100x100", size: 100000, mem: 0, time: 7.644µs }
+BenchResult { subject: "B Tree Map", test: "sequential 100x100", size: 1000000, mem: 0, time: 16.902µs }
+BenchResult { subject: "B Tree Map", test: "sequential 100x100", size: 10000000, mem: 0, time: 22.451µs }
+BenchResult { subject: "Hash Map", test: "insertion", size: 10000, mem: 569616, time: 531.579µs }
+BenchResult { subject: "Hash Map", test: "insertion", size: 100000, mem: 4876816, time: 15.628011ms }
+BenchResult { subject: "Hash Map", test: "insertion", size: 1000000, mem: 68428816, time: 208.238287ms }
+BenchResult { subject: "Hash Map", test: "insertion", size: 10000000, mem: 579430416, time: 1.881079201s }
+BenchResult { subject: "Hash Map", test: "rand 10k", size: 10000, mem: 0, time: 240.677µs }
+BenchResult { subject: "Hash Map", test: "rand 10k", size: 100000, mem: 0, time: 910.903µs }
+BenchResult { subject: "Hash Map", test: "rand 10k", size: 1000000, mem: 0, time: 2.318041ms }
+BenchResult { subject: "Hash Map", test: "rand 10k", size: 10000000, mem: 0, time: 2.090788ms }
+BenchResult { subject: "No Index", test: "insertion", size: 10000, mem: 160000, time: 165.448µs }
+BenchResult { subject: "No Index", test: "insertion", size: 100000, mem: 1600000, time: 1.195814ms }
+BenchResult { subject: "No Index", test: "rand 10k", size: 10000, mem: 0, time: 10ns }
+BenchResult { subject: "No Index", test: "rand 10k", size: 100000, mem: 0, time: 20ns }
+BenchResult { subject: "No Index", test: "sequential 100x100", size: 10000, mem: 0, time: 3.497504ms }
+BenchResult { subject: "No Index", test: "sequential 100x100", size: 100000, mem: 0, time: 122.04656ms }
+BenchResult { subject: "Rudy Map", test: "insertion", size: 10000, mem: 19026336, time: 2.720429ms }
+BenchResult { subject: "Rudy Map", test: "insertion", size: 100000, mem: 76457440, time: 19.137236ms }
+BenchResult { subject: "Rudy Map", test: "insertion", size: 1000000, mem: 90211672, time: 170.063219ms }
+BenchResult { subject: "Rudy Map", test: "insertion", size: 10000000, mem: 162211672, time: 1.586728765s }
+BenchResult { subject: "Rudy Map", test: "rand 10k", size: 10000, mem: 0, time: 882.141µs }
+BenchResult { subject: "Rudy Map", test: "rand 10k", size: 100000, mem: 0, time: 631.113µs }
+BenchResult { subject: "Rudy Map", test: "rand 10k", size: 1000000, mem: 0, time: 765.724µs }
+BenchResult { subject: "Rudy Map", test: "rand 10k", size: 10000000, mem: 0, time: 809.846µs }
+BenchResult { subject: "Sorted Vec", test: "insertion", size: 10000, mem: 400000, time: 1.546616ms }
+BenchResult { subject: "Sorted Vec", test: "insertion", size: 100000, mem: 4000000, time: 19.047429ms }
+BenchResult { subject: "Sorted Vec", test: "insertion", size: 1000000, mem: 40000000, time: 295.233809ms }
+BenchResult { subject: "Sorted Vec", test: "insertion", size: 10000000, mem: 400000000, time: 4.138090213s }
+BenchResult { subject: "Sorted Vec", test: "rand 10k", size: 10000, mem: 0, time: 1.531237ms }
+BenchResult { subject: "Sorted Vec", test: "rand 10k", size: 100000, mem: 0, time: 5.128527ms }
+BenchResult { subject: "Sorted Vec", test: "rand 10k", size: 1000000, mem: 0, time: 15.861505ms }
+BenchResult { subject: "Sorted Vec", test: "rand 10k", size: 10000000, mem: 0, time: 26.590105ms }
+BenchResult { subject: "Sorted Vec", test: "sequential 100x100", size: 10000, mem: 0, time: 2.575µs }
+BenchResult { subject: "Sorted Vec", test: "sequential 100x100", size: 100000, mem: 0, time: 10.62µs }
+BenchResult { subject: "Sorted Vec", test: "sequential 100x100", size: 1000000, mem: 0, time: 14.898µs }
+BenchResult { subject: "Sorted Vec", test: "sequential 100x100", size: 10000000, mem: 0, time: 25.347µs }
+
+
+SMART STRINGS
+Ram used generating 10000000 strings : 240002312 bytes
+BenchResult { subject: "B Tree Map", test: "insertion", size: 10000, mem: 582640, time: 1.105546ms }
+BenchResult { subject: "B Tree Map", test: "insertion", size: 100000, mem: 5819088, time: 12.672918ms }
+BenchResult { subject: "B Tree Map", test: "insertion", size: 1000000, mem: 58183568, time: 175.414581ms }
+BenchResult { subject: "B Tree Map", test: "insertion", size: 10000000, mem: 581820480, time: 2.124255333s }
+BenchResult { subject: "B Tree Map", test: "rand 10k", size: 10000, mem: 0, time: 1.510069ms }
+BenchResult { subject: "B Tree Map", test: "rand 10k", size: 100000, mem: 0, time: 2.56499ms }
+BenchResult { subject: "B Tree Map", test: "rand 10k", size: 1000000, mem: 0, time: 5.648775ms }
+BenchResult { subject: "B Tree Map", test: "rand 10k", size: 10000000, mem: 0, time: 6.929577ms }
+BenchResult { subject: "B Tree Map", test: "sequential 100x100", size: 10000, mem: 0, time: 7.804µs }
+BenchResult { subject: "B Tree Map", test: "sequential 100x100", size: 100000, mem: 0, time: 6.933µs }
+BenchResult { subject: "B Tree Map", test: "sequential 100x100", size: 1000000, mem: 0, time: 23.483µs }
+BenchResult { subject: "B Tree Map", test: "sequential 100x100", size: 10000000, mem: 0, time: 17.362µs }
+BenchResult { subject: "Hash Map", test: "insertion", size: 10000, mem: 780688, time: 411.165µs }
+BenchResult { subject: "Hash Map", test: "insertion", size: 100000, mem: 6725392, time: 8.284226ms }
+BenchResult { subject: "Hash Map", test: "insertion", size: 1000000, mem: 93206032, time: 114.621202ms }
+BenchResult { subject: "Hash Map", test: "insertion", size: 10000000, mem: 793648144, time: 2.003439119s }
+BenchResult { subject: "Hash Map", test: "rand 10k", size: 10000, mem: 0, time: 174.645µs }
+BenchResult { subject: "Hash Map", test: "rand 10k", size: 100000, mem: 0, time: 1.727212ms }
+BenchResult { subject: "Hash Map", test: "rand 10k", size: 1000000, mem: 0, time: 1.627276ms }
+BenchResult { subject: "Hash Map", test: "rand 10k", size: 10000000, mem: 0, time: 2.02167ms }
+BenchResult { subject: "No Index", test: "insertion", size: 10000, mem: 240000, time: 84.758µs }
+BenchResult { subject: "No Index", test: "insertion", size: 100000, mem: 2400000, time: 957.45µs }
+BenchResult { subject: "No Index", test: "rand 10k", size: 10000, mem: 0, time: 262.203994ms }
+BenchResult { subject: "No Index", test: "rand 10k", size: 100000, mem: 0, time: 2.629022566s }
+BenchResult { subject: "No Index", test: "sequential 100x100", size: 10000, mem: 0, time: 5.023423ms }
+BenchResult { subject: "No Index", test: "sequential 100x100", size: 100000, mem: 0, time: 39.281832ms }
+BenchResult { subject: "Rudy Map", test: "insertion", size: 10000, mem: 19127584, time: 2.334743ms }
+BenchResult { subject: "Rudy Map", test: "insertion", size: 100000, mem: 76106656, time: 19.942076ms }
+BenchResult { subject: "Rudy Map", test: "insertion", size: 1000000, mem: 90211672, time: 159.03005ms }
+BenchResult { subject: "Rudy Map", test: "insertion", size: 10000000, mem: 162211672, time: 1.542386965s }
+BenchResult { subject: "Rudy Map", test: "rand 10k", size: 10000, mem: 0, time: 895.916µs }
+BenchResult { subject: "Rudy Map", test: "rand 10k", size: 100000, mem: 0, time: 838.289µs }
+BenchResult { subject: "Rudy Map", test: "rand 10k", size: 1000000, mem: 0, time: 1.165608ms }
+BenchResult { subject: "Rudy Map", test: "rand 10k", size: 10000000, mem: 0, time: 705.052µs }
+BenchResult { subject: "Sorted Vec", test: "insertion", size: 10000, mem: 560000, time: 1.316569ms }
+BenchResult { subject: "Sorted Vec", test: "insertion", size: 100000, mem: 5600000, time: 16.327324ms }
+BenchResult { subject: "Sorted Vec", test: "insertion", size: 1000000, mem: 56000000, time: 200.519258ms }
+BenchResult { subject: "Sorted Vec", test: "insertion", size: 10000000, mem: 560000000, time: 2.398067515s }
+BenchResult { subject: "Sorted Vec", test: "rand 10k", size: 10000, mem: 0, time: 1.181307ms }
+BenchResult { subject: "Sorted Vec", test: "rand 10k", size: 100000, mem: 0, time: 2.39851ms }
+BenchResult { subject: "Sorted Vec", test: "rand 10k", size: 1000000, mem: 0, time: 8.736046ms }
+BenchResult { subject: "Sorted Vec", test: "rand 10k", size: 10000000, mem: 0, time: 13.760651ms }
+BenchResult { subject: "Sorted Vec", test: "sequential 100x100", size: 10000, mem: 0, time: 2.435µs }
+BenchResult { subject: "Sorted Vec", test: "sequential 100x100", size: 100000, mem: 0, time: 4.118µs }
+BenchResult { subject: "Sorted Vec", test: "sequential 100x100", size: 1000000, mem: 0, time: 13.245µs }
+BenchResult { subject: "Sorted Vec", test: "sequential 100x100", size: 10000000, mem: 0, time: 12.914µs }
+
+Overall : 
+rudymap is surprisingly slow to build and memory hungry. 19MB for 10k items? The control is only 240k. weird. 
+It performs well on random access at least, 692us is 10x faster than the B Tree and almost 3x faster than the hashmap. 
+Its also 20x faster than the sorted vec.
+Its also got the unfair advantage of working with 8 byte ints instead of strings.
+
+Build Speed : Rudy Map (large) > Hash Map > Btree Map > Sorted Vec >> Rudy Map (Small) ~ Radix Tree 
+Random Access Speed : Rudy Map (700us) 3x > Hash Map 3x > Btree Map  2x > Sorted Vec ~ Radix Tree (12ms)
+Sequential Access Speed : Sorted Vec ~ Radix Tree (13us) > BTree (17us)
+Memory Usage : RudyMap (huge , 16 bytes) > Sorted Vec (56 Bytes) > Btree Map (58 bytes) > HashMap (small : 80 Bytes) > RudyMap (small : 191 bytes) > HashMap (large : 800 Bytes) 
+
+Sorted Vec is 2 copies of the item + 8 bytes. Probably just padding of (String,usize).
+
+I think im going to do 1 last test, parallelizing sorted vec and seeing how it goes.
+
+
+Ram used generating 10000000 strings : 240001896 bytes
+BenchResult { subject: "B Tree Map", test: "insertion", size: 10000, mem: 582640, time: 1.074949ms }
+BenchResult { subject: "B Tree Map", test: "insertion", size: 100000, mem: 5819088, time: 12.988916ms }
+BenchResult { subject: "B Tree Map", test: "insertion", size: 1000000, mem: 58183568, time: 175.167137ms }
+BenchResult { subject: "B Tree Map", test: "insertion", size: 10000000, mem: 581820480, time: 2.092602473s }
+BenchResult { subject: "B Tree Map", test: "rand 10k", size: 10000, mem: 0, time: 1.520037ms }
+BenchResult { subject: "B Tree Map", test: "rand 10k", size: 100000, mem: 0, time: 2.340443ms }
+BenchResult { subject: "B Tree Map", test: "rand 10k", size: 1000000, mem: 0, time: 4.561472ms }
+BenchResult { subject: "B Tree Map", test: "rand 10k", size: 10000000, mem: 0, time: 7.404099ms }
+BenchResult { subject: "B Tree Map", test: "sequential 100x100", size: 10000, mem: 0, time: 6.682µs }
+BenchResult { subject: "B Tree Map", test: "sequential 100x100", size: 100000, mem: 0, time: 7.755µs }
+BenchResult { subject: "B Tree Map", test: "sequential 100x100", size: 1000000, mem: 0, time: 13.144µs }
+BenchResult { subject: "B Tree Map", test: "sequential 100x100", size: 10000000, mem: 0, time: 18.975µs }
+BenchResult { subject: "Hash Map", test: "insertion", size: 10000, mem: 780688, time: 686.807µs }
+BenchResult { subject: "Hash Map", test: "insertion", size: 100000, mem: 6725392, time: 13.36213ms }
+BenchResult { subject: "Hash Map", test: "insertion", size: 1000000, mem: 93206032, time: 169.814032ms }
+BenchResult { subject: "Hash Map", test: "insertion", size: 10000000, mem: 793648144, time: 1.721087728s }
+BenchResult { subject: "Hash Map", test: "rand 10k", size: 10000, mem: 0, time: 461.899µs }
+BenchResult { subject: "Hash Map", test: "rand 10k", size: 100000, mem: 0, time: 1.475945ms }
+BenchResult { subject: "Hash Map", test: "rand 10k", size: 1000000, mem: 0, time: 1.813984ms }
+BenchResult { subject: "Hash Map", test: "rand 10k", size: 10000000, mem: 0, time: 2.15629ms }
+BenchResult { subject: "No Index", test: "insertion", size: 10000, mem: 240000, time: 101.038µs }
+BenchResult { subject: "No Index", test: "insertion", size: 100000, mem: 2400000, time: 733.214µs }
+BenchResult { subject: "No Index", test: "rand 10k", size: 10000, mem: 0, time: 269.486223ms }
+BenchResult { subject: "No Index", test: "rand 10k", size: 100000, mem: 0, time: 2.721256537s }
+BenchResult { subject: "No Index", test: "sequential 100x100", size: 10000, mem: 0, time: 2.842516ms }
+BenchResult { subject: "No Index", test: "sequential 100x100", size: 100000, mem: 0, time: 28.952303ms }
+BenchResult { subject: "Parallel Vec", test: "insertion", size: 10000, mem: 679304, time: 1.373104ms }
+BenchResult { subject: "Parallel Vec", test: "insertion", size: 100000, mem: 5600000, time: 4.031558ms }
+BenchResult { subject: "Parallel Vec", test: "insertion", size: 1000000, mem: 56000000, time: 39.067694ms }
+BenchResult { subject: "Parallel Vec", test: "insertion", size: 10000000, mem: 560000000, time: 522.179885ms }
+BenchResult { subject: "Parallel Vec", test: "rand 10k", size: 10000, mem: 0, time: 1.233414ms }
+BenchResult { subject: "Parallel Vec", test: "rand 10k", size: 100000, mem: 0, time: 2.037349ms }
+BenchResult { subject: "Parallel Vec", test: "rand 10k", size: 1000000, mem: 0, time: 6.488346ms }
+BenchResult { subject: "Parallel Vec", test: "rand 10k", size: 10000000, mem: 0, time: 13.258848ms }
+BenchResult { subject: "Parallel Vec", test: "sequential 100x100", size: 10000, mem: 0, time: 2.625µs }
+BenchResult { subject: "Parallel Vec", test: "sequential 100x100", size: 100000, mem: 0, time: 3.246µs }
+BenchResult { subject: "Parallel Vec", test: "sequential 100x100", size: 1000000, mem: 0, time: 7.885µs }
+BenchResult { subject: "Parallel Vec", test: "sequential 100x100", size: 10000000, mem: 0, time: 15.298µs }
+BenchResult { subject: "Rudy Map", test: "insertion", size: 10000, mem: 19114544, time: 2.725969ms }
+BenchResult { subject: "Rudy Map", test: "insertion", size: 100000, mem: 76112920, time: 22.9773ms }
+BenchResult { subject: "Rudy Map", test: "insertion", size: 1000000, mem: 90211672, time: 162.829804ms }
+BenchResult { subject: "Rudy Map", test: "insertion", size: 10000000, mem: 162211672, time: 1.708689862s }
+BenchResult { subject: "Rudy Map", test: "rand 10k", size: 10000, mem: 0, time: 753.632µs }
+BenchResult { subject: "Rudy Map", test: "rand 10k", size: 100000, mem: 0, time: 668.363µs }
+BenchResult { subject: "Rudy Map", test: "rand 10k", size: 1000000, mem: 0, time: 732.122µs }
+BenchResult { subject: "Rudy Map", test: "rand 10k", size: 10000000, mem: 0, time: 767.557µs }
+
+
+about 5x faster on my 8 core mobile chip. so good.
+I think for my purposes, B Tree seems the best. 
+Maybe theres some postgres query to send the order of the rows in the index by column too. 

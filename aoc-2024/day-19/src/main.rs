@@ -14,13 +14,13 @@ mod benchmarks
     use test::Bencher;
 
     #[bench]
-    fn bench_part1(b: &mut Bencher)
+    fn day_19_bench_part1(b: &mut Bencher)
     {
         b.iter(|| part1());
     }
 
     #[bench]
-    fn bench_part2(b: &mut Bencher)
+    fn day_19_bench_part2(b: &mut Bencher)
     {
         b.iter(|| part2());
     }

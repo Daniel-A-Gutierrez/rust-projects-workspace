@@ -73,7 +73,8 @@ fn try_make(pieces: &[&'static str], desired: &'static str) -> Option<Vec<&'stat
     {
         match try_make(pieces, &desired[prefix.len()..])
         {
-            None => {},
+            None =>
+            {}
             Some(mut solution) =>
             {
                 solution.push(prefix);
@@ -87,7 +88,8 @@ fn try_make(pieces: &[&'static str], desired: &'static str) -> Option<Vec<&'stat
 
 // memo[desired.len()] = number of solutions
 // None = unknown
-fn try_make_all(pieces: &[&'static str], desired: &'static str, memos : &mut Vec<Option<u64>>) -> u64
+fn try_make_all(pieces: &[&'static str], desired: &'static str, memos: &mut Vec<Option<u64>>)
+                -> u64
 {
     if (desired.len() == 0)
     {
@@ -97,8 +99,9 @@ fn try_make_all(pieces: &[&'static str], desired: &'static str, memos : &mut Vec
 
     match memos[desired.len()]
     {
-        None => {}
-        Some(memo) => return memo
+        None =>
+        {}
+        Some(memo) => return memo,
     }
 
     let prefixes = pieces.iter().filter(|&p| desired.starts_with(p));
@@ -108,11 +111,12 @@ fn try_make_all(pieces: &[&'static str], desired: &'static str, memos : &mut Vec
     {
         match try_make_all(pieces, &desired[prefix.len()..], memos)
         {
-            0 => {},
+            0 =>
+            {}
             x =>
             {
                 //solution.iter_mut().for_each(|e| e.push(prefix));
-                solutions+=x;
+                solutions += x;
             }
         }
     }

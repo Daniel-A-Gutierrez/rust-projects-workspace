@@ -1,0 +1,15 @@
+[package]
+name = "day-20"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "library"
+path = "src/lib.rs"
+
+[[bin]]
+name = "binary"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = { version = "1.0.94", features = ["backtrace"] }
