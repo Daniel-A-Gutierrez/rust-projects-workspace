@@ -70,7 +70,7 @@ pub trait SeqIndex<VALUE>
 }
 
 pub trait EqIndex<VALUE>
-    where Self : Sized + Index<VALUE>,
+    where Self: Sized + Index<VALUE>,
           VALUE: Clone
 {
     fn find_eq<'a, 'b>(&self, v: &'a VALUE, data: &'b Vec<VALUE>) -> Option<&'b VALUE>;
@@ -84,7 +84,7 @@ pub trait Index<VALUE>
 
     fn new(v: &[VALUE]) -> Self
     {
-        return Self::from_iter(v.iter().cloned().enumerate().map(|(i,e)| (e,i)));
+        return Self::from_iter(v.iter().cloned().enumerate().map(|(i, e)| (e, i)));
     }
 
     fn name(&self) -> &'static str;
@@ -134,12 +134,15 @@ fn find_n_gt_unindexed<VALUE>(v: &VALUE, n: usize, data: &Vec<VALUE>) -> impl It
              .into_iter();
 }
 
-
 pub struct NoIndex {}
 
-impl<T> FromIterator<T> for NoIndex{ fn from_iter<X>(iter: X) -> Self {
-    return NoIndex{};
-}}
+impl<T> FromIterator<T> for NoIndex
+{
+    fn from_iter<X>(iter: X) -> Self
+    {
+        return NoIndex {};
+    }
+}
 
 impl<INDEX, VALUE> Table<INDEX, VALUE>
     where INDEX: SeqIndex<VALUE>,
@@ -185,44 +188,44 @@ impl<INDEX, VALUE> Table<INDEX, VALUE>
     {
         return self.index.name();
     }
-
 }
 
-
-impl <VALUE> Index<VALUE> for NoIndex where VALUE : Clone
+impl<VALUE> Index<VALUE> for NoIndex where VALUE: Clone
 {
     fn insert(&mut self, v: &VALUE, k: usize) {}
 
-    fn new(v: &[VALUE]) -> Self {
-        return NoIndex{};
+    fn new(v: &[VALUE]) -> Self
+    {
+        return NoIndex {};
     }
 
-    fn name(&self) -> &'static str {
+    fn name(&self) -> &'static str
+    {
         return "No Index";
     }
 }
 
 impl<VALUE> EqIndex<VALUE> for NoIndex where VALUE: Clone + PartialEq
 {
-    fn find_eq<'a, 'b>(&self, v: &'a VALUE, data: &'b Vec<VALUE>) -> Option<&'b VALUE> {
-        data.iter().find(|d| *d==v)
+    fn find_eq<'a, 'b>(&self, v: &'a VALUE, data: &'b Vec<VALUE>) -> Option<&'b VALUE>
+    {
+        data.iter().find(|d| *d == v)
     }
 }
 
-impl<VALUE> SeqIndex<VALUE> for NoIndex where VALUE : Ord + Clone 
+impl<VALUE> SeqIndex<VALUE> for NoIndex where VALUE: Ord + Clone
 {
-    
-
     fn find_n_lt<'a, 'b>(&self,
-                             v: &'a VALUE,
-                             n: usize,
-                             data: &'b Vec<VALUE>)
-                             -> impl Iterator<Item = &'b VALUE> + use<'a, 'b, '_, VALUE> {
+                         v: &'a VALUE,
+                         n: usize,
+                         data: &'b Vec<VALUE>)
+                         -> impl Iterator<Item = &'b VALUE> + use<'a, 'b, '_, VALUE>
+    {
         find_n_lt_unindexed(v, n, data)
     }
 }
 
-impl<VALUE> Index<VALUE> for HashMap<VALUE,usize> where VALUE : Ord + Hash + Clone
+impl<VALUE> Index<VALUE> for HashMap<VALUE, usize> where VALUE: Ord + Hash + Clone
 {
     fn insert(&mut self, v: &VALUE, k: usize)
     {
@@ -243,7 +246,7 @@ impl<VALUE> EqIndex<VALUE> for HashMap<VALUE, usize> where VALUE: Ord + Hash + C
     }
 }
 
-impl<VALUE> Index<VALUE> for BTreeMap<VALUE,usize> where VALUE : Ord + Clone
+impl<VALUE> Index<VALUE> for BTreeMap<VALUE, usize> where VALUE: Ord + Clone
 {
     fn insert(&mut self, v: &VALUE, k: usize)
     {
@@ -256,7 +259,7 @@ impl<VALUE> Index<VALUE> for BTreeMap<VALUE,usize> where VALUE : Ord + Clone
     }
 }
 
-impl<VALUE> EqIndex<VALUE> for BTreeMap<VALUE,usize> where VALUE : Ord + Clone 
+impl<VALUE> EqIndex<VALUE> for BTreeMap<VALUE, usize> where VALUE: Ord + Clone
 {
     fn find_eq<'a, 'b>(&self, v: &'a VALUE, data: &'b Vec<VALUE>) -> Option<&'b VALUE>
     {
@@ -274,11 +277,9 @@ impl<VALUE> SeqIndex<VALUE> for BTreeMap<VALUE, usize> where VALUE: Ord + Clone
     {
         return self.range(..v).rev().take(n).map(|(_, i)| &data[*i]);
     }
-
-
 }
 
-impl<VALUE> Index<VALUE> for Trie<VALUE,usize> where VALUE : Ord + Clone + TrieKey
+impl<VALUE> Index<VALUE> for Trie<VALUE, usize> where VALUE: Ord + Clone + TrieKey
 {
     fn insert(&mut self, v: &VALUE, k: usize)
     {
@@ -291,7 +292,7 @@ impl<VALUE> Index<VALUE> for Trie<VALUE,usize> where VALUE : Ord + Clone + TrieK
     }
 }
 
-impl<VALUE> EqIndex<VALUE> for Trie<VALUE,usize> where VALUE : Ord + Clone + TrieKey
+impl<VALUE> EqIndex<VALUE> for Trie<VALUE, usize> where VALUE: Ord + Clone + TrieKey
 {
     fn find_eq<'a, 'b>(&self, v: &'a VALUE, data: &'b Vec<VALUE>) -> Option<&'b VALUE>
     {
@@ -309,39 +310,45 @@ impl<VALUE> SeqIndex<VALUE> for Trie<VALUE, usize> where VALUE: Ord + Clone + Tr
                          -> impl Iterator<Item = &'b VALUE> + use<'a, 'b, '_, VALUE>
     {
         return self.subtrie(&v)
-                    .expect("Radix Tree doesnt support positioning to keys not in the tree")
-                    .iter().map(|node| &data[*(node.1)]).take(n);
+                   .expect("Radix Tree doesnt support positioning to keys not in the tree")
+                   .iter()
+                   .map(|node| &data[*(node.1)])
+                   .take(n);
     }
-
-
 }
 
 use rayon::prelude::*;
-pub struct SortedVecIndex<VALUE : Ord + Send> (SortedVec<(VALUE,usize)>);
+pub struct SortedVecIndex<VALUE: Ord + Send>(SortedVec<(VALUE, usize)>);
 
-impl<VALUE : Ord + Send> Deref for SortedVecIndex<VALUE> 
-{ 
-    type Target = SortedVec<(VALUE,usize)>; 
-    fn deref(&self) -> &Self::Target { &self.0 } 
-} 
+impl<VALUE: Ord + Send> Deref for SortedVecIndex<VALUE>
+{
+    type Target = SortedVec<(VALUE, usize)>;
+    fn deref(&self) -> &Self::Target
+    {
+        &self.0
+    }
+}
 
-impl<VALUE : Ord + Send> DerefMut for SortedVecIndex<VALUE> 
-{ 
-    fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 } 
-} 
+impl<VALUE: Ord + Send> DerefMut for SortedVecIndex<VALUE>
+{
+    fn deref_mut(&mut self) -> &mut Self::Target
+    {
+        &mut self.0
+    }
+}
 
-impl<VALUE> FromIterator<(VALUE,usize)> for SortedVecIndex<VALUE> where VALUE: Ord + Clone + Send
-{ 
-    fn from_iter<ITER : IntoIterator<Item=(VALUE,usize)>>(iter: ITER) -> Self 
-    { 
-        let mut v : Vec<(VALUE,usize)> = iter.into_iter().collect();
-        v.par_sort_unstable();    
-        let sv = unsafe { SortedVec::<(VALUE,usize)>::from_sorted(v)};      
+impl<VALUE> FromIterator<(VALUE, usize)> for SortedVecIndex<VALUE> where VALUE: Ord + Clone + Send
+{
+    fn from_iter<ITER: IntoIterator<Item = (VALUE, usize)>>(iter: ITER) -> Self
+    {
+        let mut v: Vec<(VALUE, usize)> = iter.into_iter().collect();
+        v.par_sort_unstable();
+        let sv = unsafe { SortedVec::<(VALUE, usize)>::from_sorted(v) };
         return SortedVecIndex(sv);
     }
 }
 
-impl<VALUE> Index<VALUE> for SortedVecIndex<VALUE> where VALUE : Ord + Clone + Send
+impl<VALUE> Index<VALUE> for SortedVecIndex<VALUE> where VALUE: Ord + Clone + Send
 {
     fn insert(&mut self, v: &VALUE, k: usize)
     {
@@ -354,12 +361,14 @@ impl<VALUE> Index<VALUE> for SortedVecIndex<VALUE> where VALUE : Ord + Clone + S
     }
 }
 
-impl<VALUE> EqIndex<VALUE> for SortedVecIndex<VALUE> where VALUE : Ord + Clone  + Send
+impl<VALUE> EqIndex<VALUE> for SortedVecIndex<VALUE> where VALUE: Ord + Clone + Send
 {
     fn find_eq<'a, 'b>(&self, v: &'a VALUE, data: &'b Vec<VALUE>) -> Option<&'b VALUE>
     {
-        return self.0.binary_search_by_key(&v, |(val, idx)| val)
-            .ok().and_then(|(index_idx)| Some(&data[self[index_idx].1]));
+        return self.0
+                   .binary_search_by_key(&v, |(val, idx)| val)
+                   .ok()
+                   .and_then(|(index_idx)| Some(&data[self[index_idx].1]));
     }
 }
 
@@ -371,66 +380,71 @@ impl<VALUE> SeqIndex<VALUE> for SortedVecIndex<VALUE> where VALUE: Ord + Clone +
                          data: &'b Vec<VALUE>)
                          -> impl Iterator<Item = &'b VALUE> + use<'a, 'b, '_, VALUE>
     {
-        let index_idx = match self.binary_search_by_key(&v, |(val, idx)| val) 
+        let index_idx = match self.binary_search_by_key(&v, |(val, idx)| val)
         {
-            Ok(x) => x, 
-            Err(x) => x
+            Ok(x) => x,
+            Err(x) => x,
         };
-        return self[(index_idx - n).max(0)..index_idx].iter().map(|(_,idx)| &data[*idx]);
+        return self[(index_idx - n).max(0)..index_idx].iter()
+                                                      .map(|(_, idx)| &data[*idx]);
     }
 }
 
+// Define the newtype wrapper
+pub struct RudyMapIndex<KEY: rudy::Key>(RudyMap<KEY, usize>);
 
-
-// Define the newtype wrapper 
-pub struct RudyMapIndex<KEY : rudy::Key> (RudyMap<KEY, usize>);
-
-// Implement Deref and DerefMut to access the inner RudyMap use std::ops::{Deref, DerefMut}; 
-impl<KEY : rudy::Key> Deref for RudyMapIndex<KEY> 
-{ 
-    type Target = RudyMap<KEY,usize>; 
-    fn deref(&self) -> &Self::Target { &self.0 } 
-} 
-
-impl<KEY : rudy::Key> DerefMut for RudyMapIndex<KEY> 
-{ 
-    fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 } 
-} 
-
-// Implement FromIterWrapper for the newtype 
-impl<KEY> FromIterator<(KEY,usize)> for RudyMapIndex<KEY> where KEY: rudy::Key
-{ 
-    fn from_iter<ITER : IntoIterator<Item=(KEY,usize)>>(iter: ITER) -> Self 
-    { 
-        let mut map = RudyMap::new(); 
-        for (key, value) in iter 
-        { 
-            map.insert(key, value); 
-        } 
-        RudyMapIndex(map) 
-    }
-}
-
-impl<VALUE> Index<VALUE> for RudyMapIndex<VALUE> 
-where VALUE : rudy::Key
+// Implement Deref and DerefMut to access the inner RudyMap use std::ops::{Deref, DerefMut};
+impl<KEY: rudy::Key> Deref for RudyMapIndex<KEY>
 {
-    fn insert(&mut self, v: &VALUE, k: usize) {
+    type Target = RudyMap<KEY, usize>;
+    fn deref(&self) -> &Self::Target
+    {
+        &self.0
+    }
+}
+
+impl<KEY: rudy::Key> DerefMut for RudyMapIndex<KEY>
+{
+    fn deref_mut(&mut self) -> &mut Self::Target
+    {
+        &mut self.0
+    }
+}
+
+// Implement FromIterWrapper for the newtype
+impl<KEY> FromIterator<(KEY, usize)> for RudyMapIndex<KEY> where KEY: rudy::Key
+{
+    fn from_iter<ITER: IntoIterator<Item = (KEY, usize)>>(iter: ITER) -> Self
+    {
+        let mut map = RudyMap::new();
+        for (key, value) in iter
+        {
+            map.insert(key, value);
+        }
+        RudyMapIndex(map)
+    }
+}
+
+impl<VALUE> Index<VALUE> for RudyMapIndex<VALUE> where VALUE: rudy::Key
+{
+    fn insert(&mut self, v: &VALUE, k: usize)
+    {
         self.0.insert(v.clone(), k);
     }
- 
-    fn name(&self)-> &'static str {return "Rudy Map";}   
+
+    fn name(&self) -> &'static str
+    {
+        return "Rudy Map";
+    }
 }
 
-impl<VALUE> EqIndex<VALUE> for RudyMapIndex<VALUE> where VALUE : rudy::Key
+impl<VALUE> EqIndex<VALUE> for RudyMapIndex<VALUE> where VALUE: rudy::Key
 {
     fn find_eq<'a, 'b>(&self, v: &'a VALUE, data: &'b Vec<VALUE>) -> Option<&'b VALUE>
     {
         return self.get(*v).and_then(|idx| Some(&data[*idx]));
     }
 }
-
-
-
 
 // impl<VALUE> Table<SortedVec<(VALUE,usize)>, VALUE>
 // where VALUE : Ord + PartialEq + Clone

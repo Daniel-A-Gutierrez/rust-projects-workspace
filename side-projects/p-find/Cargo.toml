@@ -1,0 +1,10 @@
+[package]
+name = "p-find"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+conv = "0.3.3"
+num = "0.4.3"
+rand = { version = "0.8.5" }
+rayon = "1.10.0"

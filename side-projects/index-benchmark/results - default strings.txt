@@ -159,7 +159,7 @@ Random Access Speed : Rudy Map (700us) 3x > Hash Map 3x > Btree Map  2x > Sorted
 Sequential Access Speed : Sorted Vec ~ Radix Tree (13us) > BTree (17us)
 Memory Usage : RudyMap (huge , 16 bytes) > Sorted Vec (56 Bytes) > Btree Map (58 bytes) > HashMap (small : 80 Bytes) > RudyMap (small : 191 bytes) > HashMap (large : 800 Bytes) 
 
-Sorted Vec is 2 copies of the item + 8 bytes. Probably just padding of (String,usize).
+Sorted Vec is 2 copies of the item + 8 bytes. Makes sense. 
 
 I think im going to do 1 last test, parallelizing sorted vec and seeing how it goes.
 

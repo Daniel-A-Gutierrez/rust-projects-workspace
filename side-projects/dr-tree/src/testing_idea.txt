@@ -1,0 +1,93 @@
+for simplicity lets say our chunk size is 8, and pointers are 1 byte
+
+"brick"
+"banana"
+"break"
+"bricked"
+"broken"
+
+[brick]
+[b v (anana, rick)^ ]
+[b v (anana, r v (ick, eak,))^  ]
+[b v (anana, r v (ick v (,ed,)^ eak,)^)^ ]
+[b v (anana, r v (ick v (,ed,)^ eak, oken,)^)^ ]
+
+the () are purely for flavor to show a set of siblings.
+statistically the control symbols should occur in descending frequency : 
+',', 'v' , '^', *
+
+, : appears after each inserted string. In the case with brick, the pre-len is 0 but it
+indicates that 'brick' was an inserted value. 
+
+v : indicates the following set is an inlined subtree of children, suffixes of the string preceding it. 
+It carries a byte value of the length of that subtree. 
+
+^ : v but for reverse iteration. 
+
+since i know the string length won't be zero
+
+* : Not mutually exclusive to the others, so it needs its own bit.
+    the last 8 bytes of the following string are a pointer to a heap allocated string.
+
+
+
+each has a * variant, so *, *v *^ 
+
+since these are all pointers, i can use 'len = 0' as an extra bit to express them.
+the case where len is zero and the header discriminant is 0 is reserved for the first and final byte in the tree.
+
+so 2 bits for node type , then if len is 0 its a node * . 
+
+so with 5 bytes left the maximum inline length is 31. 
+
+
+pointers are a u32. u64 takes way too much of the space. 
+
+i think this is more of a skip list with heavy inlining? 
+each str needs to have a <- , and -> pointer, and could also have ^ and v pointers. 
+having these be actual pointers would be a waste. 
+
+*v stores a pointer so its fixed size, we can just walk over it and we're at the next. 
+
+
+nodes fall into a few categories, with subcategories
+
+string - either inlined, or heap allocated + inlined. 
+control - either local or remote - within the same node or to another.
+
+the first bit denotes string or control. 
+if string 
+the second indicates inlined or heap allocated.
+the remaining six indicate the strings inline length.
+at the end of the string, this header is replicated as the footer.
+
+if control 
+the second, if control, indicates down or over. 
+
+if its down :
+    if its length zero 
+    a subtree may not have length zero .
+    if the length is zero, the subtree is remote, and the following 4 bytes are a node pointer.
+    were still following the header footer pattern
+    The whole thing is 6 bytes, like this : 
+    ... hdr 'x' 'y' 'z' 'w' ftr v*[0] x x x x v*[0] hdr 'a' 'b' 'c' 'd' ftr ...
+
+    if its not length zero 
+    the remaining 6 bits indicate the length of the subtree inline. 
+    ... hdr 'x' 'y' 'z' 'w' ftr v[6] hdr 'd' 'e' x' 'f' ftr v[6] hdr 'a' 'b' 'c' 'd' ftr ...
+
+
+if its over
+    over controls go at the beginning and end of node clusters.
+    1 bit is used for 'prev' or 'next' 
+    the following 4 bytes are a link to a previous or next node cluster. 
+
+in addition, the byte at the beginning of each node stores its filled len.
+it also stores a bit indicating if theres a 4 byte prefix immediately after it,
+and a bit for if theres a 4 byte suffix at the end.  
+
+
+Part 2 
+Heres another idea,
+if huffman trees are optimal, can i somehow make that into a radix tree?
+I 

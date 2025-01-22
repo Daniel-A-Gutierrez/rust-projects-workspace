@@ -1,0 +1,11 @@
+[package]
+name = "br-tree"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "binary"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = { version = "1.0.94", features = ["backtrace"] }
