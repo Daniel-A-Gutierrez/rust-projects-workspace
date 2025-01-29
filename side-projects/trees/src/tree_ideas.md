@@ -39,10 +39,30 @@ how does this insertion process work?
 2 ^ ( 4 + 4 + 4 + 4 + 3 + 3 + 3 + 2 + 2 + 1 ....)
                  65k              268mb           
                  
+### Iterating over the tree array
+coming from the perspective of : "we have a sorted array, lets tree-ify it".
 
+we need the len, and i think thats it. 
+gonna continue this in code.
+
+### Eytzinger Forest
+Ok so eytzinger trees are only valid at sizes 2^n -1 and 2^n. 
+Since theyre basically sorted arrays just reshuffled, inserting into them is O(n). 
+If i could find a way to merge them itd be faster. 
+Found a way to merge them - split the tree by tiers - the left ones are from the lesser tree, the right 
+from the greater tree. The new element that was between them is the new root.
 
 ### Porous array
 I think the simplest way of implementing this is to just double up the capacity and  
 intersperse elements on even indexes, inserting at the first available spot in order.
 
 indexes wont be preserved. its sorted. thats a given.
+
+### int map
+not an array, but kinda acts like one. 
+map.insert(1,2) inserts 1 with key 1.
+map.insert(20,2) inserts 2 with key 20. 
+
+internally we have a vec of keys->idx, and a vec[idx]= val. 
+keys can be stored in order for relatively quick indexing.
+this could be useful for the tree's rows.
