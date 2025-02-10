@@ -6,6 +6,7 @@ I could be vain and say GE-Ordering, for Generalized Eytzinger Ordering that als
 */
 
 use anyhow::{bail, Result};
+use rayon::slice::ParallelSliceMut;
 //#![feature(test)]
 #[cfg(test)]
 mod test
@@ -13,6 +14,26 @@ mod test
     extern crate test;
     use super::*;
     use test::Bencher;
+
+    #[test]
+    fn forestify_test()
+    {
+        let range = 12..128;
+        let v = range.into_iter().collect::<Vec<usize>>();
+        let forest = unsafe { forestify_sorted::<_, 3>(&v) };
+        println!("{:?}", forest);
+    }
+
+    #[test]
+    fn tree_lens_t()
+    {
+        for i in 0..128 
+        {
+            println!("BASE : 2, LEN : {i}, RESULT : {:?}", tree_lengths::<2>(i));
+            println!("BASE : 7, LEN : {i}, RESULT : {:?}", tree_lengths::<7>(i));
+            println!("BASE : 11, LEN : {i}, RESULT : {:?}", tree_lengths::<41>(i));
+        }
+    }
 
     #[test]
     fn gen_e_orderings()
@@ -76,6 +97,18 @@ mod test
     {
         b.iter(|| (0..(16usize.pow(4))).into_iter().collect::<Vec<usize>>());
     }
+
+    #[bench]
+    fn tree_len_b(b: &mut Bencher)
+    {
+        b.iter(|| 
+            {
+                for i in 1..10
+                {
+                    tree_lengths2::<4>(16usize.pow(i) - 1);
+                }
+            });
+    }
 }
 
 //ensure uniqueness and completeness of set.
@@ -111,6 +144,7 @@ fn power_of_N_minus_one(q: u64, n: u64) -> (bool, u32)
 }
 
 // dividing with each step could be skipped if i scaled the array by denom.
+// ~80us
 fn GE_ordering(degree: usize, len: usize) -> Result<Vec<usize>>
 {
     if degree < 2
@@ -449,16 +483,13 @@ fn GE_ordering8<const DEGREE: i64>(len: usize) -> Result<Vec<usize>>
 //its faster on larger DEGREES but slower with DEGREE=2
 fn GE_ordering9<const DEGREE: i64>(len: usize) -> Result<Vec<usize>>
 {
-    if DEGREE < 2
-    {
-        bail!(" N must be at least 2. ");
-    }
+    assert!(DEGREE > 1 ," N must be at least 2. N = {DEGREE}");
     let (valid_len, depth) = power_of_N_minus_one(len as u64, DEGREE as u64);
     if !valid_len
     {
         bail!(
-              "N Ordering only valid for arrays with lengths\
-         that are powers of N, minus 1. N : {}, length : {}.",
+              "N Ordering only valid for arrays with lengths \
+              that are powers of N, minus 1. N : {}, length : {}.",
               DEGREE,
               len
         );
@@ -488,3 +519,133 @@ fn GE_ordering9<const DEGREE: i64>(len: usize) -> Result<Vec<usize>>
 
     return Ok(ordering);
 }
+
+/// Find the tree lengths that a sorted vec can be broken into as 
+/// a forest of trees of the same degree.
+/// All trees will have a length of 2^n - 1 except the last. 
+fn tree_lengths<const DEGREE : usize>(mut len : usize) -> Vec<usize>
+{
+    println!("{}",len);
+    assert!(DEGREE > 1, "DEGREE must be greater than 1.");
+    let mut lengths = vec![];
+    let mut candidate = DEGREE;
+    loop
+    {
+        let next = candidate * DEGREE;
+        if next > len {break;}
+        candidate = next;
+    }
+    //  candidate <= len
+    while len > DEGREE
+    {
+        if( candidate <= len)
+        {
+            lengths.push(candidate);
+            len -= candidate;
+            continue;
+        }
+        candidate /= DEGREE;
+    }
+    if len > 0 {lengths.push(len);}
+
+    return lengths;
+}
+
+// yay 4x faster, 800ns to 215ns. 
+fn tree_lengths2<const DEGREE : i64>(mut len : usize) -> Vec<usize>
+{
+    assert!(DEGREE > 1, "DEGREE must be greater than 1.");
+    if(len == 0){return vec![];}
+
+    let mut lengths = vec![];
+    let degree = DEGREE as usize;
+    let max_height = len.ilog(degree);
+    let mut power = DEGREE.pow(max_height) as usize;
+    let mut minus_one = power - 1 ;
+    while len > degree -1
+    {
+        if len >= minus_one 
+        {
+            lengths.push(minus_one);
+            len -= minus_one;
+        }
+        else 
+        {
+            power /= degree;
+            minus_one = power - 1;    
+        }
+    }
+    if len > 0 {lengths.push(len);}
+    return lengths;
+}
+
+
+// about the same, but incorrect.
+fn tree_lengths3<const DEGREE : i64>(mut len : usize) -> Vec<usize>
+{
+    assert!(DEGREE > 1, "DEGREE must be greater than 1.");
+    if(len == 0){return vec![];}
+
+    let mut lengths = vec![];
+    let degree = DEGREE as usize;
+    while len > degree - 1 as usize
+    {
+        let max_height = len.ilog(degree);
+        let power = degree.pow(max_height);
+        let minus_one = power - 1;
+        let factor = len/minus_one;
+        for _ in 0..factor
+        {
+            lengths.push(factor);
+        }
+        len -= minus_one*factor;
+    }
+    if len > 0 {lengths.push(len);}
+    return lengths;
+}
+
+/// DEGREE : How many children each node has, or the number of items in the node + 1. 
+pub unsafe fn forestify_sorted<T : Clone+ Ord+ Eq+ Send+ Sync, const DEGREE : i64>( data : &Vec<T> ) -> Vec<Vec<T>>
+{
+    let tree_lengths = tree_lengths2::<DEGREE>(data.len());
+    if tree_lengths.len() == 0 {return vec![]; }
+    let mut forest : Vec<Vec<T>> = vec![];
+    let mut accumulator = 0;
+    for len in tree_lengths.into_iter()
+    {
+        let ordering = GE_ordering9::<DEGREE>(len);
+        match ordering 
+        {
+            Ok(valid_ordering) => 
+            {
+                forest.push(
+                    valid_ordering
+                    .into_iter()
+                    .map(|idx| data[idx + accumulator].clone()) //tricky clone to get rid of.
+                    .collect());
+                accumulator += len;
+            }
+            Err(_) => break
+        }
+    }
+    if ( accumulator < data.len() )
+    {
+        forest.push(Vec::from(&data[accumulator..]));
+    }
+    return forest;
+}
+
+/// DEGREE : How many children each node has, or the number of items in the node + 1. 
+pub fn forestify_unsorted<T : Clone+ Ord+ Eq+ Send+ Sync, const DEGREE : i64>( data : &Vec<T> ) -> Vec<Vec<T>>
+{
+    let mut cloned = data.clone();
+    cloned.par_sort();
+    unsafe {forestify_sorted::<_,DEGREE>(&cloned)}
+    //i want a way to do this in place, so we dont need to double copy...
+    //not gonna obsess over it rn. next is searching, then iteration. 
+}
+
+//actually heres an idea, why bother skipping the elements? 
+//I'm gonna make a new ordering with redundancy. Should be way simpler and maybe faster? 
+//Definitely faster for high orders of N.
+

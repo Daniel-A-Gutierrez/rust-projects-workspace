@@ -84,7 +84,7 @@ fn calculate_cost(regions: &Regions, plots: &Array2<Plot>) -> u64
     return total_cost;
 }
 
-fn calculate_discounted_cost(regions: &Regions, plots: &Array2<Plot>, matrix: &Array2<char>)
+fn calculate_discounted_cost(regions: &Regions, _plots: &Array2<Plot>, matrix: &Array2<char>)
                              -> u64
 {
     // println!("Calculating Discounted Cost");

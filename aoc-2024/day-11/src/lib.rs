@@ -1,3 +1,4 @@
+#![allow(unused_parens)]
 use anyhow::Result;
 use linked_list::{CursorMut, LinkedList};
 use std::collections::HashMap;
@@ -9,7 +10,7 @@ pub fn part_one() -> Result<()>
     test_num_digits();
     let mut stones = load_input()?;
     println!("stones : {:?}", stones);
-    for i in 0..25
+    for _ in 0..25
     {
         step(&mut stones);
     }
@@ -46,6 +47,7 @@ fn step(stones: &mut Vec<u64>)
     let _ = replace(stones, new_stones);
 }
 
+#[allow(dead_code)]
 fn step_in_place(stones: &mut LinkedList<u64>)
 {
     let mut cursor = stones.cursor_mut(); //just gonna assume it starts at 0
@@ -134,6 +136,7 @@ fn split_number(u: u64) -> (u64, u64)
     return (left, right);
 }
 
+#[allow(dead_code)]
 fn legacy_split_number(u: u32) -> (u32, u32)
 {
     let s = u.to_string();

@@ -1,6 +1,6 @@
 #![allow(unused_parens)]
 use anyhow::Result;
-use ndarray::{Array, Array2, Axis};
+use ndarray::{Array, Array2};
 use sorted_vec::SortedSet;
 use std::{fs, io::Read};
 pub fn part_one() -> Result<()>

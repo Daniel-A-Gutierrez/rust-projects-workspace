@@ -10,3 +10,4 @@ path = "src/main.rs"
 [dependencies]
 anyhow = { version = "1.0.94", features = ["backtrace"] }
 generic-array = "1.2.0"
+rayon = "1.10.0"

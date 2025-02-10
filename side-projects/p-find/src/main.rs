@@ -1,4 +1,10 @@
 #![allow(unused_parens)]
+
+/// the goal here was to make a search algo that takes a 
+/// best guess at each hop, instead of a binary choice.
+/// it does find solutions even at very large data sizes in 3-4 hops, but its still
+/// twice as slow as binary search.
+
 use std::{ops::Range, time::{Duration, Instant}, u32};
 
 use rand::{Rng, distributions::Uniform, thread_rng};
