@@ -1,6 +1,8 @@
 
 use anyhow::{bail, Result};
 use rayon::prelude::*;
+use std::simd::{prelude::*, LaneCount, SimdElement, SupportedLaneCount, Mask};
+use std::simd::cmp::{SimdOrd, SimdPartialOrd, SimdPartialEq};
 //#![feature(test)]
 #[cfg(test)]
 mod test
@@ -20,8 +22,8 @@ mod test
             let mut evens : Vec<_> = data.map(|e| e*2).iter().cloned().collect();
             evens.sort_by(|a,b| b.cmp(a));
             let mut odds : Vec<_> = data.map(|e| e*2+1).iter().cloned().collect();
-            let evens_tree = RevSTree::<_,4>::from_unsorted(&evens).unwrap();
-            let odds_tree = RevSTree::<_,4>::from_unsorted(&odds).unwrap();
+            let evens_tree = RevSTree::<4>::from_unsorted(&evens).unwrap();
+            let odds_tree = RevSTree::<4>::from_unsorted(&odds).unwrap();
             odds.sort_by(|a,b| b.cmp(a));
             println!("{:?}", (0..odds.len()).into_iter().collect::<Vec<usize>>());
             println!("{:?}",evens);
@@ -48,7 +50,7 @@ mod test
         fn s_tree_basic()
         {
             let mut data = [0,1,4,2,3,8,7,10,6,5,14,14,11,13,3,3];
-            let tree = RevSTree::<_,4>::from_unsorted2(&data).unwrap();
+            let tree = RevSTree::<4>::from_unsorted2(&data).unwrap();
             data.sort_by(|a,b| b.cmp(a));
             println!("{:?}", (0..data.len()).into_iter().collect::<Vec<usize>>());
             println!("{:?}",data);
@@ -59,76 +61,27 @@ mod test
                 println!("{}\t{}\t{:?}\t{:?}\t{:?}", i, d ,tree.find_first(d), tree.find_last(d), tree.find_range(d));
             }
         }
-
-        #[test]
-        fn poly_sum_test()
-        {
-            for i in 0..6
-            {
-                println!("{}", tree_poly_sum(4, i, 3))
-            }
-        }
-
-        #[test]
-        fn par_gen_test() -> Result<()>
-        {
-            println!("{:?}", par_gen_ordering::<4>(64)?);
-            return Ok(());
-        }
-
-        #[test]
-        fn gen_test() -> Result<()>
-        {
-            println!("{:?}", gen_ordering(64,4)?);
-            return Ok(());
-        }
-
-        #[test]
-        fn gen_rev_test() -> Result<()>
-        {
-            println!("{:?}", gen_rev_ordering(64,4)?);
-            return Ok(());
-        }
     }
 
     mod benchmarks 
     {
         use super::*;
         use sorted_vec::SortedVec;
-    
-        #[bench]
-        fn par_gen_tree_bench(b : &mut Bencher)
-        {
-            b.iter( || { 
-                for i in 1..8
-                {
-                    par_gen_ordering::<4>( 4usize.pow(i) ).unwrap();
-                }
-            });
-        }
-
-        #[bench]
-        fn gen_tree_bench(b : &mut Bencher)
-        {
-            b.iter( || { 
-                    gen_ordering( 16usize.pow(4), 16 ).unwrap()
-            });
-        }
 
         // find range perf : 
-        // 38us - epow 28, degree 16.
-        // 8.2us - epow 24, degree 16.
-        // 5.5us - epow 20, degree 16. 5.291 with find last. 
-        // 3.2us - epow 16, degree 4. with b search on find last, its 1.55us .
+        // 38us - epow 28, degree 16. //24 us with simd. 
+        // 8.2us - epow 24, degree 16. //7 us with simd.
+        // 5.5us - epow 20, degree 16. 5.291 with find last. sped up to 4us with simd.
+        // 3.2us - epow 16, degree 4. with b search on find last, its 1.55us . 1.6us with simd.
         // high degrees do better at larger sizes, small powers at lower sizes. 
         #[bench]
         fn find_first_1kx64k(b : &mut Bencher)
         {
-            let epow = 20;
+            let epow = 16;
             let lpow = 7;
             let scale= 2u32.pow(epow-lpow);
             let v = (0..2u32.pow(epow)).rev().collect::<Vec<u32>>();
-            let tree = RevSTree::<_,16>::from_unsorted(&v).unwrap();
+            let tree = RevSTree::<4>::from_unsorted(&v).unwrap();
             b.iter( || {
                     
                     for i in 0..2u32.pow(lpow)
@@ -146,7 +99,7 @@ mod test
         #[bench]
         fn btree_search_1kx64k(b : &mut Bencher)
         {
-            let epow = 20;
+            let epow = 16;
             let lpow = 7;
             let v = (0..2u32.pow(epow)).rev().collect::<Vec<u32>>();
             let tree = std::collections::BTreeSet::from_iter(v.iter());
@@ -194,7 +147,7 @@ mod test
         {
             let v = (0..2u32.pow(16)).rev().collect::<Vec<u32>>();
             b.iter( || { 
-                    let tree = RevSTree::<_,16>::from_unsorted2(&v).unwrap();
+                    let tree = RevSTree::<16>::from_unsorted2(&v).unwrap();
             });
         }
 
@@ -261,86 +214,27 @@ fn tree_shape(degree : usize, len : usize) -> Result<(usize,usize)>
     else { bail!("Invalid len for tree, {} is not a power of {}", len, degree); }
 }
 
-// waaay slower lol
-fn par_gen_ordering<const DEGREE : usize>(len : usize) -> Result<Vec<usize>>
-{
-    let (height, tree_len) = tree_shape(DEGREE, len)?;
-    let mut tree = vec![0;tree_len];
-    let mut step_by = 1;
-    let mut start = tree_len;
-    let mut tier_len = len;
-    for _ in 0..height 
-    {
-        start -= tier_len;
-        let dst_iter = (&mut tree[start..start+tier_len]).par_iter_mut();
-        let src_iter = (0..len).into_par_iter().step_by(step_by);
-        dst_iter.zip_eq(src_iter).for_each(|(dst,src)| *dst = src);
-        step_by *= DEGREE;
-        tier_len /= DEGREE;
-        
-    }
-    return Ok(tree);
-}
-
-fn gen_ordering(len : usize, degree : usize) -> Result<Vec<usize>>
-{
-    let (height, tree_len) = tree_shape(degree, len)?;
-    let mut tree = vec![0;tree_len];
-    let mut step_by = 1;
-    let mut start = tree_len;
-    let mut tier_len = len;
-    for _ in 0..height 
-    {
-        start -= tier_len;
-        let dst = &mut tree[start..start + tier_len];
-        let mut s = 0;
-        for i in (0..tier_len)
-        {
-            dst[i] = s;
-            s += step_by;
-        }
-        step_by *= degree;
-        tier_len /= degree;
-        
-    }
-    return Ok(tree);
-}
-
-// orders like ' 1 2 3 4 5 6 7 8, 1 3 5 7, 1 5 ' . Should be easier to build from unsorted data.
-fn gen_rev_ordering(len : usize, degree : usize) -> Result<Vec<usize>>
-{
-    let (height, tree_len) = tree_shape(degree, len)?;
-    let mut tree = vec![0;tree_len];
-    let mut step_by = 1;
-    let mut start = 0;
-    let mut tier_len = len;
-    for _ in 0..height 
-    {
-        let dst = &mut tree[start..start + tier_len];
-        let mut s = len;
-        for i in (0..tier_len)
-        {
-            s -= step_by;
-            dst[i] = s;
-        }
-        start += tier_len;
-        step_by *= degree;
-        tier_len /= degree;
-    }
-    return Ok(tree);
-}
-
 
 //cant assume items are unique so have to check eq.
+// #[inline]
+// fn num_lteq<T , const DEGREE : usize>(v : &Simd<T,DEGREE>, element : &T) -> usize
+// where LaneCount<DEGREE>: SupportedLaneCount,
+// T : SimdElement, //hate that it has to be uint.
+// Simd<T,DEGREE> : SimdOrd + SimdUint
+// {
+//     let comparand = Simd::splat(*element);
+//     let ones = Simd::<T,DEGREE>::splat();
+//     let r =  v.saturating_sub(comparand).simd_min(ones).reduce_sum();
+// }
+
 #[inline]
-fn num_lteq<const DEGREE : usize, T : Ord>(slice : &[T;DEGREE], element : &T) -> usize
+fn num_lteq<const DEGREE : usize>(v : &Simd<u32,DEGREE>, element : u32) -> usize
+where LaneCount<DEGREE>: SupportedLaneCount,
 {
-    let mut lteq = 0;
-    for i in 0..DEGREE
-    {
-        if slice[i] <= *element {lteq += 1;}
-    }
-    return lteq;
+    let comparand = Simd::splat(element);
+    let ones = Simd::splat(1u32);
+    let r =  (v).saturating_sub(comparand).simd_min(ones).reduce_sum() as usize;
+    return DEGREE - r;
 }
 
 #[inline]
@@ -367,20 +261,21 @@ fn num_lt<const DEGREE : usize, T : Ord>(slice : &[T;DEGREE], element : &T) -> u
 
 
 #[derive(Debug)]
-struct RevSTree<KEY : Clone + Eq + Ord + Sized , const DEGREE : usize>
+struct RevSTree<const DEGREE : usize>
 {
-    keys : Vec<KEY>,
+    keys : Vec<u32>,
     len : usize,
     height : usize,
 }
 
-impl<const DEGREE : usize, KEY > RevSTree<KEY,DEGREE>
-where KEY : Clone + Eq + Ord + Sized + Sync + Send
+impl<const DEGREE : usize> RevSTree<DEGREE>
+where LaneCount<DEGREE> : SupportedLaneCount
+//where u32 : Clone + Eq + Ord + Sized + Sync + Send
 {
-    fn from_unsorted(src : &[KEY]) -> Result<Self>
+    fn from_unsorted(src : &[u32]) -> Result<Self>
     {
         let (height,len) = tree_shape(DEGREE, src.len())?;
-        let mut tree = Vec::<KEY>::with_capacity(len);
+        let mut tree = Vec::<u32>::with_capacity(len);
         tree.extend_from_slice(src);
         //reverse sort
         if src.len() > 1023 { tree.par_sort_by(|a,b| b.cmp(a)); }
@@ -402,10 +297,10 @@ where KEY : Clone + Eq + Ord + Sized + Sync + Send
         return Ok(RevSTree{keys : tree, len : src.len(), height});
     }
 
-    fn from_unsorted2(src : &[KEY]) -> Result<Self>
+    fn from_unsorted2(src : &[u32]) -> Result<Self>
     {
         let (height,len) = tree_shape(DEGREE, src.len())?;
-        let mut tree = Vec::<KEY>::with_capacity(len);
+        let mut tree = Vec::<u32>::with_capacity(len);
         tree.extend_from_slice(src);
         //reverse sort
         if src.len() > 1023 { tree.par_sort_by(|a,b| b.cmp(a)); }
@@ -425,18 +320,18 @@ where KEY : Clone + Eq + Ord + Sized + Sync + Send
     }
 
     //lt gets me the lower bound (inexact), lteq the upper (exact). 
-    fn find_last(&self, key : &KEY) -> Result<usize, usize>
+    fn find_last(&self, key : &u32) -> Result<usize, usize>
     {
-        if(self.len < 65537) 
-        {
-            let mut i = self.keys[0..self.len].binary_search(&key)?;
-            while i > 0
-            {
-                if self.keys[i-1] != *key {return Ok(i);}
-                i-=1;
-            }
-            return Ok(0);
-        }
+        // if(self.len < 65537) 
+        // {
+        //     let mut i = self.keys[0..self.len].binary_search(&key)?;
+        //     while i > 0
+        //     {
+        //         if self.keys[i-1] != *key {return Ok(i);}
+        //         i-=1;
+        //     }
+        //     return Ok(0);
+        // }
         //bounds check so we dont have to do it in the loop
         let min = &self.keys[self.len - 1];
         if (key == min) {return Ok(self.len - 1);}
@@ -446,8 +341,8 @@ where KEY : Clone + Eq + Ord + Sized + Sync + Send
         for _ in 1..self.height
         {
             let idx = self.keys.len() - DEGREE * ridx;
-            let node = &self.keys[idx-DEGREE..idx];
-            let lteq = num_lteq::<DEGREE,_>(node.try_into().unwrap(), key);            
+            let node : &[u32;DEGREE] = (&self.keys[idx-DEGREE..idx]).try_into().unwrap();
+            let lteq = num_lteq::<DEGREE>(&Simd::from_slice(node), *key);            
             ridx = ridx * DEGREE + lteq;
         }
 
@@ -461,7 +356,7 @@ where KEY : Clone + Eq + Ord + Sized + Sync + Send
     }
 
     //lt gets me the lower bound (inexact) 
-    fn find_first(&self, key : &KEY) -> Result<usize, usize>
+    fn find_first(&self, key : &u32) -> Result<usize, usize>
     {
         //bounds check so we dont have to do it in the loop
         let min = &self.keys[self.len - 1];
@@ -490,7 +385,7 @@ where KEY : Clone + Eq + Ord + Sized + Sync + Send
     //finds the inclusive range of indeces of elements gteq to lower bound and lteq to upper bound. 
     /// Panics if lower bound > upper bound . 
     #[rustfmt::skip]
-    fn find_range(&self, key : &KEY) -> (usize, usize)
+    fn find_range(&self, key : &u32) -> (usize, usize)
     {
         //bounds check so we dont have to do it in the loop
         let min = &self.keys[self.len - 1];
@@ -509,7 +404,7 @@ where KEY : Clone + Eq + Ord + Sized + Sync + Send
             {
                 let idx = self.keys.len() - DEGREE * u_ridx;
                 let node = (&self.keys[idx-DEGREE..idx]).try_into().unwrap();
-                let eq = num_eq::<DEGREE,KEY>(node, key);
+                let eq = num_eq::<DEGREE,u32>(node, key);
                 u_ridx = u_ridx * DEGREE + eq;
             }
         }
@@ -522,8 +417,8 @@ where KEY : Clone + Eq + Ord + Sized + Sync + Send
                 {
                     let idx = self.keys.len() - DEGREE * u_ridx;
                     let node = (&self.keys[idx-DEGREE..idx]).try_into().unwrap();
-                    let lt = num_lt::<DEGREE,KEY>(node, key);
-                    let eq = num_eq::<DEGREE,KEY>(node, key);
+                    let lt = num_lt::<DEGREE,u32>(node, key);
+                    let eq = num_eq::<DEGREE,u32>(node, key);
                     l_ridx = l_ridx * DEGREE + lt;
                     u_ridx = l_ridx + eq;
                 }
@@ -531,12 +426,14 @@ where KEY : Clone + Eq + Ord + Sized + Sync + Send
                 {
                     let l_idx = self.keys.len() - DEGREE * l_ridx;
                     let l_node = (&self.keys[l_idx-DEGREE..l_idx]).try_into().unwrap();
-                    let lt = num_lt::<DEGREE,KEY>(l_node, key);
+                    let lt = num_lt::<DEGREE,u32>(l_node, key);
                     l_ridx = l_ridx * DEGREE + lt;
                     
                     let u_idx = self.keys.len() - DEGREE * u_ridx;
-                    let u_node = (&self.keys[u_idx-DEGREE..u_idx]).try_into().unwrap();
-                    let lteq = num_lteq::<DEGREE,KEY>(u_node, key);
+
+                    let u_node : &[u32;DEGREE] = (&self.keys[u_idx-DEGREE..u_idx]).try_into().unwrap();
+                    let lteq = num_lteq::<DEGREE>(&Simd::from_slice(u_node), *key); 
+
                     u_ridx = u_ridx * DEGREE + lteq;   
                 }
             }
