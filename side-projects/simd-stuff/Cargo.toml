@@ -1,0 +1,14 @@
+[package]
+name = "simd-stuff"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+generic-array = "1.2.0"
+rand = "0.9.0"
+rayon = "1.10.0"
+typenum = { version = "1.18.0", features = ["const-generics"] }
+
+[lib]
+name = "simd_stuff"
+path = "src/lib.rs"
