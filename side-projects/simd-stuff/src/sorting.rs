@@ -29,6 +29,7 @@ mod test
 
         // about 700ns : ( . Need shuffle_dyn for this to be decent i bet. 
         // 300ns after optimizing. not even close still. 
+        // 86ns after using min max !
         #[bench]
         fn bubble_sort_vec_b(bencher : &mut Bencher)
         {
