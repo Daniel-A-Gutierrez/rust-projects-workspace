@@ -205,24 +205,38 @@ fn bubble_sort_vec(arr : &mut[i32; 32])
     // let vidxs = Simd::from_array(idxs::<32>());
     // const EVENS32 : [usize ; 32] = evens::<32>();
     // const ODDS32 : [usize ; 32] = odds::<32>();
-    let alt = Mask::from_array(alternating());//1 0 1 0 1 0 1 0
-    let nalt = alt.shift_elements_right::<1>(false);
-    let mut filter = &alt;
+    
+    //let alt = Mask::from_array(alternating());//1 0 1 0 1 0 1 0
+    // let nalt = alt.shift_elements_right::<1>(false);
+    // let mut filter = &alt;
     //let mut scatter_mask = [0i32; 32];
     let mut b = true;
+    let mut src = Simd::from_array(*arr);
+    const even_swap : [usize ; 32] = [0,33,2,35,4,37,6,39,8,41,10,43,12,45,14,47,16,49,18,51,20,53,22,55,24,57,26,59,28,61,30,63];
+    //const odd_swap : [usize; 32] =
     loop 
     {
-        let mut src = Simd::from_array(*arr);
         let sl = src.shift_elements_left::<1>(i32::MAX);
         let sr = src.shift_elements_right::<1>(i32::MIN);
         let swap_mask = src.simd_gt(sl);
         if (!swap_mask.any()) {break;}
-        let gt_mask = filter.select_mask(swap_mask, *filter); // basically an AND
-        unsafe {sr.store_select_unchecked(arr, gt_mask.shift_elements_right::<1>(!b));}
-        unsafe {sl.store_select_unchecked(arr, gt_mask);}
+        let left = src.simd_min(sl);
+        let right = src.simd_max(sr);
+        
+        if(b) {
+            src = simd_swizzle!(left,right,even_swap);}
+        else {
+            src = simd_swizzle!(right,left,even_swap);
+        }
+    //     let gt_mask = filter.select_mask(swap_mask, *filter); // basically an AND
+    //     unsafe {sr.store_select_unchecked(arr, gt_mask.shift_elements_right::<1>(!b));}
+    //     unsafe {sl.store_select_unchecked(arr, gt_mask);}
         b = !b;
-        filter = if(b) {&alt} else {&nalt};
+    //     filter = if(b) {&alt} else {&nalt};
+    // }
     }
+    src.copy_to_slice(arr);
+    
 }
 
 fn bubble_sort(arr : &mut [i32])
