@@ -6,7 +6,7 @@ use rayon::slice::ParallelSliceMut;
 use rand::distr::uniform::Uniform;
 use typenum::{Const, Double, UInt, Unsigned};
 use generic_array::{ArrayLength, IntoArrayLength, ConstArrayLength,  GenericArray as Array};
-use crate::random_numbers;
+use random_data::random_numbers;
 
 #[cfg(test)]
 mod test
@@ -22,26 +22,32 @@ mod test
         #[test]
         fn bubble_sort_vec_t()
         {
-            let mut sample : [i32 ; 32] = random_numbers(32).try_into().unwrap();
-            bubble_sort_vec::<32>(&mut sample);
+            let mut sample : [i32 ; 32] = random_numbers(32,0,1000).try_into().unwrap();
+            bubble_sort_vec(&mut sample);
             assert!(sample.is_sorted(), "bubble sort vec doesn't sort!");
         }
 
+        // about 700ns : ( . Need shuffle_dyn for this to be decent i bet. 
+        // 300ns after optimizing. not even close still. 
         #[bench]
         fn bubble_sort_vec_b(bencher : &mut Bencher)
         {
-            let sample = random_numbers(32);
+            let mut sample = random_numbers(32,0,1000);
+            //sample.sort();
             bencher.iter(|| 
             {
                 let mut src = sample.clone();
-                bubble_sort_vec::<32>(&mut src.try_into().unwrap());
+                bubble_sort_vec(&mut src.try_into().unwrap());
             });
         }
         
+        //about 200ns
+        // 150-200 ns per iter.
         #[bench]
         fn bubble_sort_b(bencher : &mut Bencher)
         {
-            let sample = random_numbers(32);
+            let mut sample = random_numbers(32,0,1000);
+            //sample.sort();
             bencher.iter(|| 
             {
                 let mut src = sample.clone();
@@ -52,7 +58,7 @@ mod test
         #[bench]
         fn control(bencher : &mut Bencher)
         {
-            let sample = random_numbers(16);
+            let sample = random_numbers(32,0,1000);
             bencher.iter(|| 
             {
                 let mut src = sample.clone();
@@ -97,6 +103,20 @@ fn bubble_merge()
 
 }
 
+const fn alternating<const LEN : usize>() -> [bool ; LEN]
+where LaneCount<LEN> : SupportedLaneCount, 
+{
+    let mut r = [false; LEN];
+    let mut i = 0;
+    loop 
+    {
+        if i > LEN - 2 { break }
+        r[i] = true;
+        i+=2;
+    }
+    return r;
+}
+
 ///0, 0, 2, 2, 4, 4, ...
 const fn evens<const LEN : usize>() -> [usize ; LEN]
 where LaneCount<LEN> : SupportedLaneCount, 
@@ -130,7 +150,7 @@ where LaneCount<LEN> : SupportedLaneCount,
 }
 
 /// 1, 0, 3, 2, 5, 4 ...
-const fn swapped_evens<const LEN : usize>() -> [usize; LEN]
+const fn swapped_evens<const LEN : usize>() -> [i32 ; LEN]
 where LaneCount<LEN> : SupportedLaneCount, 
 {
     let mut idxs = idxs::<LEN>();
@@ -144,7 +164,7 @@ where LaneCount<LEN> : SupportedLaneCount,
     return idxs;
 }
 ///0, 2, 1, 4, 3, ...
-const fn swapped_odds<const LEN : usize>() -> [usize; LEN]
+const fn swapped_odds<const LEN : usize>() -> [i32 ; LEN]
 where LaneCount<LEN> : SupportedLaneCount, 
 {
     let mut idxs = idxs::<LEN>();
@@ -159,56 +179,49 @@ where LaneCount<LEN> : SupportedLaneCount,
 }
 
 ///0, 1, 2, 3, 4, 5, ...
-const fn idxs<const LEN : usize>() -> [usize; LEN]
+const fn idxs<const LEN : usize>() -> [i32; LEN]
 where LaneCount<LEN> : SupportedLaneCount, 
 
 {
-    let mut r = [0;LEN];
+    let mut r = [0i32;LEN];
     let mut i = 0;
     loop
     {
-        r[i] = i;
+        r[i as usize] = i;
         i += 1;
-        if i > LEN - 1 {break}
+        if i > LEN as i32 - 1 {break}
     }
     return r;
 }
 
+//let gt_m = simd_swizzle!(src.simd_gt(sl).to_int() , evens()); 
+// ^^ doesnt work because const generics are still too limited.
+//so i have to use a fixed size of 32 to test swizzles effect on perf. 
 #[inline]
-fn bubble_sort_vec<const VLEN : usize>(arr : &mut[i32; VLEN])
-where LaneCount<VLEN> : SupportedLaneCount, 
+fn bubble_sort_vec(arr : &mut[i32; 32]) 
 {
-    let swapped_evens = Simd::from_array(swapped_evens());
-    let swapped_odds = Simd::from_array(swapped_odds());
-    //let idxs = Simd::from_array(idxs());
-    let evens = Simd::from_array(evens());
-    let odds = Simd::from_array(odds());
-    let mut scatter_mask = [0i32; VLEN];
-
+    // let swapped_evens = swapped_evens::<32>();
+    // let swapped_odds = Simd::from_array(swapped_odds::<32>());    //let idxs = Simd::from_array(idxs());
+    // let vidxs = Simd::from_array(idxs::<32>());
+    // const EVENS32 : [usize ; 32] = evens::<32>();
+    // const ODDS32 : [usize ; 32] = odds::<32>();
+    let alt = Mask::from_array(alternating());//1 0 1 0 1 0 1 0
+    let nalt = alt.shift_elements_right::<1>(false);
+    let mut filter = &alt;
+    //let mut scatter_mask = [0i32; 32];
+    let mut b = true;
     loop 
     {
         let mut src = Simd::from_array(*arr);
         let sl = src.shift_elements_left::<1>(i32::MAX);
-        let gt_m = src.simd_gt(sl);
-        if (!gt_m.any()) {break;}
-
-        // vperm : "look what they need to mimic a fraction of our power" 
-        
-        let gtma = gt_m.to_int().to_array();
-        let gt_m_e = Mask::from_int(Simd::gather_or(&gtma, evens, src)); //src is unused.
-        //let gt_m_e = Mask::from_int(Simd::from_array(scatter_mask));
-        
-        // this into being required feels bad.
-        src.scatter_select(arr, gt_m_e.into(), swapped_evens);
-        src = Simd::from_array(*arr);
-
-        let sr = src.shift_elements_left::<1>(i32::MIN);
-        let lt_m = src.simd_gt(sr);
-        let ltma = lt_m.to_int().to_array();
-        //lt_m.to_int().scatter(&mut scatter_mask, odds);
-        let lt_m_o = Mask::from_int(Simd::gather_or(&ltma, odds, src));
-
-        src.scatter_select(arr, lt_m_o.into(), swapped_odds);
+        let sr = src.shift_elements_right::<1>(i32::MIN);
+        let swap_mask = src.simd_gt(sl);
+        if (!swap_mask.any()) {break;}
+        let gt_mask = filter.select_mask(swap_mask, *filter); // basically an AND
+        unsafe {sr.store_select_unchecked(arr, gt_mask.shift_elements_right::<1>(!b));}
+        unsafe {sl.store_select_unchecked(arr, gt_mask);}
+        b = !b;
+        filter = if(b) {&alt} else {&nalt};
     }
 }
 

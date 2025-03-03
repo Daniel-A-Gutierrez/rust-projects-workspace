@@ -1,18 +1,18 @@
-#![feature(iter_array_chunks, test, portable_simd, array_chunks, generic_const_exprs)]
+#![feature(iter_array_chunks, test,array_chunks, portable_simd, generic_const_exprs)]
 #![allow(unused_parens, non_snake_case, dead_code)]
 #![feature(trait_alias)]
 mod sorting;
-
+use random_data::random_numbers;
 
 use std::{cmp::Ordering, simd::{prelude::*, LaneCount, SupportedLaneCount}};
-use rand::Rng;
+
 use rayon::slice::ParallelSliceMut;
-use rand::distr::uniform::Uniform;
+
 
 fn main()
 {
-    let a = random_numbers(1024);
-    let b = random_numbers(1024);
+    let a = random_numbers(1024, 0 , 1000);
+    let b = random_numbers(1024, 0 , 1000);
     println!("{:?}", compare_arrays_control(&a[0..1024].try_into().unwrap(), 
                     &b[0..1024].try_into().unwrap()));
 }
@@ -196,196 +196,141 @@ where LaneCount<VLEN> : SupportedLaneCount
 }
 
 
-#[cfg(test)]
-mod test
-{
-    extern crate test;
-    use super::*;
-    use test::Bencher;
+// #[cfg(test)]
+// mod test
+// {
+//     extern crate test;
+//     use super::*;
+//     use test::Bencher;
 
-    mod benchmarks
-    {
-        use super::*;
+//     mod benchmarks
+//     {
+//         use super::*;
 
-        //366ns per iter with strlen 16, 8x par, 1024 strings.
-        //202.25 ns per iter at vlen = 16, dayum . 
-        //48.5ns comparing 'aaaa' against 1024 strings. LOL. LMAO even. 
-        #[bench]
-        fn compare_string_lt_bench(bencher : &mut Bencher)
-        {
-            let n_strings = 1024;
-            let s_pool = IStringPool::from_vec(random_unique_strings(n_strings,16));
-            let mut accumulator = 0;
-            let mut idx = 0;
-            bencher.iter(|| 
-            {
-                let _needle = &s_pool.strings[idx];
-                accumulator += compare_string_lt::<16>("zzzz", &s_pool);
-                idx = (idx + 1) % n_strings as usize;
-            });
-        }
+//         //366ns per iter with strlen 16, 8x par, 1024 strings.
+//         //202.25 ns per iter at vlen = 16, dayum . 
+//         //48.5ns comparing 'aaaa' against 1024 strings. LOL. LMAO even. 
+//         #[bench]
+//         fn compare_string_lt_bench(bencher : &mut Bencher)
+//         {
+//             let n_strings = 1024;
+//             let s_pool = IStringPool::from_vec(random_unique_strings(n_strings,16));
+//             let mut accumulator = 0;
+//             let mut idx = 0;
+//             bencher.iter(|| 
+//             {
+//                 let _needle = &s_pool.strings[idx];
+//                 accumulator += compare_string_lt::<16>("zzzz", &s_pool);
+//                 idx = (idx + 1) % n_strings as usize;
+//             });
+//         }
 
-        //2053 ns/iter !
-        //1390 with the SIMD Compare strings
-        #[bench]
-        fn compare_string_lt_cntrl(bencher : &mut Bencher)
-        {
-            let n_strings = 1024;
-            let s_pool = random_unique_strings(n_strings,16);
-            let mut accumulator = 0;
-            let mut idx = 0;
-            bencher.iter(|| 
-            {
-                let needle = &s_pool[idx];
-                accumulator += s_pool.iter().filter(|e| compare_strings::<8>(e, needle).is_lt()).count();
-                idx = (idx + 1) % n_strings as usize;
-            });
-        }
+//         //2053 ns/iter !
+//         //1390 with the SIMD Compare strings
+//         #[bench]
+//         fn compare_string_lt_cntrl(bencher : &mut Bencher)
+//         {
+//             let n_strings = 1024;
+//             let s_pool = random_unique_strings(n_strings,16);
+//             let mut accumulator = 0;
+//             let mut idx = 0;
+//             bencher.iter(|| 
+//             {
+//                 let needle = &s_pool[idx];
+//                 accumulator += s_pool.iter().filter(|e| compare_strings::<8>(e, needle).is_lt()).count();
+//                 idx = (idx + 1) % n_strings as usize;
+//             });
+//         }
 
-        #[test]
-        fn compare_string_lt_test()
-        {
-            let n_strings = 1024;
-            let mut s_pool = IStringPool::from_vec(random_unique_strings(n_strings,16));
-            let mut accumulator = 0;
-            let idx = 0;
-            let needle = &s_pool.strings[idx];
-            accumulator += compare_string_lt::<8>(needle, &s_pool);
-            //not read idx = (idx + 1) % n_strings as usize;
-            println!("NEEDLE : {}", needle);
-            s_pool.strings.sort();
-            println!("{}, {}" , s_pool.strings[accumulator as usize - 1], s_pool.strings[accumulator as usize + 1]);
-        }
+//         #[test]
+//         fn compare_string_lt_test()
+//         {
+//             let n_strings = 1024;
+//             let mut s_pool = IStringPool::from_vec(random_unique_strings(n_strings,16));
+//             let mut accumulator = 0;
+//             let idx = 0;
+//             let needle = &s_pool.strings[idx];
+//             accumulator += compare_string_lt::<8>(needle, &s_pool);
+//             //not read idx = (idx + 1) % n_strings as usize;
+//             println!("NEEDLE : {}", needle);
+//             s_pool.strings.sort();
+//             println!("{}, {}" , s_pool.strings[accumulator as usize - 1], s_pool.strings[accumulator as usize + 1]);
+//         }
 
-        mod completed 
-        {
-            use super::*;
-            //440ns
-            #[bench]
-            fn compare_ints_control(bencher : &mut Bencher)
-            {
-                let a = random_numbers(1024);
-                let b = random_numbers(1024);
-                let mut accumulator = (0,0,0);
-                bencher.iter(|| {
-                    let x = compare_arrays_control(&a[0..1024].try_into().unwrap(), 
-                        &b[0..1024].try_into().unwrap());
-                    accumulator.0 += x.0;
-                });
-            }
+//         mod completed 
+//         {
+//             use super::*;
+//             //440ns
+//             #[bench]
+//             fn compare_ints_control(bencher : &mut Bencher)
+//             {
+//                 let a = random_numbers(1024);
+//                 let b = random_numbers(1024);
+//                 let mut accumulator = (0,0,0);
+//                 bencher.iter(|| {
+//                     let x = compare_arrays_control(&a[0..1024].try_into().unwrap(), 
+//                         &b[0..1024].try_into().unwrap());
+//                     accumulator.0 += x.0;
+//                 });
+//             }
 
-            //v2 : 92ns, wow.
-            //v3 : 92ns, o well. 91 inlined. 
-            //v4 : 37ns, using lane width 32! dayum.
-            #[bench]
-            fn compare_ints_simd(bencher : &mut Bencher)
-            {
-                let a = random_numbers(1024);
-                let b = random_numbers(1024);
-                let mut accumulator = 0;
+//             //v2 : 92ns, wow.
+//             //v3 : 92ns, o well. 91 inlined. 
+//             //v4 : 37ns, using lane width 32! dayum.
+//             #[bench]
+//             fn compare_ints_simd(bencher : &mut Bencher)
+//             {
+//                 let a = random_numbers(1024);
+//                 let b = random_numbers(1024);
+//                 let mut accumulator = 0;
 
-                bencher.iter(|| {
-                    accumulator += compare_arrays4::<64>(&a[0..1024].try_into().unwrap(), 
-                        &b[0..1024].try_into().unwrap()).0;
-                });
-            }
+//                 bencher.iter(|| {
+//                     accumulator += compare_arrays4::<64>(&a[0..1024].try_into().unwrap(), 
+//                         &b[0..1024].try_into().unwrap()).0;
+//                 });
+//             }
 
-            //91 ns/ iter, strlen of 16
-            //108ns / iter, strlen of 64
-            #[bench]
-            fn compare_strings_control(bencher : &mut Bencher)
-            {
-                let strings = random_unique_strings(1024,64);
-                let mut accumulator = 0;
-                bencher.iter(|| 
-                {
-                    for chunk in strings.chunks_exact(2)
-                    {
-                        if let Ordering::Less = chunk[0].cmp(&chunk[1])
-                        {
-                            accumulator += 1;
-                        }
-                    }
-                });
-            }
+//             //91 ns/ iter, strlen of 16
+//             //108ns / iter, strlen of 64
+//             #[bench]
+//             fn compare_strings_control(bencher : &mut Bencher)
+//             {
+//                 let strings = random_unique_strings(1024,64);
+//                 let mut accumulator = 0;
+//                 bencher.iter(|| 
+//                 {
+//                     for chunk in strings.chunks_exact(2)
+//                     {
+//                         if let Ordering::Less = chunk[0].cmp(&chunk[1])
+//                         {
+//                             accumulator += 1;
+//                         }
+//                     }
+//                 });
+//             }
 
-            // VLEN of 8 , strlen of 16 : 64ns per iter
-            // VLEN of 16, strlen of 16 : 55ns per iter
-            // VLEN of 16, strlen of 64 : 49ns per iter
-            // VLEN of 32, strlen of 64 : 50ns per iter. 
-            #[bench]
-            fn compare_strings_simd(bencher : &mut Bencher)
-            {
-                let strings = random_unique_strings(1024,64);
-                let mut accumulator = 0;
-                bencher.iter(|| 
-                {
-                    for chunk in strings.chunks_exact(2)
-                    {
-                        if let Ordering::Less = compare_strings::<32>(&chunk[0], &chunk[1])
-                        {
-                            accumulator += 1;
-                        }
-                    }
-                });
-            }
+//             // VLEN of 8 , strlen of 16 : 64ns per iter
+//             // VLEN of 16, strlen of 16 : 55ns per iter
+//             // VLEN of 16, strlen of 64 : 49ns per iter
+//             // VLEN of 32, strlen of 64 : 50ns per iter. 
+//             #[bench]
+//             fn compare_strings_simd(bencher : &mut Bencher)
+//             {
+//                 let strings = random_unique_strings(1024,64);
+//                 let mut accumulator = 0;
+//                 bencher.iter(|| 
+//                 {
+//                     for chunk in strings.chunks_exact(2)
+//                     {
+//                         if let Ordering::Less = compare_strings::<32>(&chunk[0], &chunk[1])
+//                         {
+//                             accumulator += 1;
+//                         }
+//                     }
+//                 });
+//             }
 
-        }
+//         }
   
-    }
-}
-
-pub fn random_numbers(n: u32) -> Vec<i32>
-{
-    let mut rng = rand::rng();
-    let mut v = Vec::with_capacity(n as usize);
-    let d = Uniform::new(0, i32::MAX).unwrap();
-    for _ in 0..n as usize
-    {
-        v.push(rng.sample(d) as i32);
-    }
-    //v.par_sort();
-    return v;
-}
-
-pub fn random_unique_strings(n: u32, strlen : u32) -> Vec<String>
-{
-    //the number of potential strings is about 6E16, too big for u32 but less than u64 int max.
-    let (tx, rx) = std::sync::mpsc::channel();
-    let nworkers = (n/100).max(10).min(1);
-    std::thread::scope(|s| {
-        for i in 0..nworkers
-        {
-            let tx = tx.clone();
-            s.spawn(move || {
-                 let mut set = std::collections::HashSet::<String>::new();
-                 let mut rng = rand::rng();
-                 let char_rng = Uniform::new(0, 25).unwrap();
-                 let mut buf = Vec::with_capacity(strlen as usize+1);
-                 while set.len() < 1 + (n / nworkers) as usize
-                 {
-                     for _ in 0..strlen - 1
-                     //rng.sample(strlen)
-                     {
-                         buf.push((rng.sample(char_rng) + 65u8) as u8);
-                     }
-                     buf.push(i as u8);
-                     let s = String::from(std::string::String::from_utf8_lossy(&buf).to_string());
-                     buf.clear();
-                     set.insert(s);
-                 }
-                 //unused? let r = Uniform::new(0, set.len() - 1).unwrap();
-                 let desorted_set: Vec<String> = set.into_iter().collect();
-                 tx.send(desorted_set).unwrap();
-             });
-        }
-    });
-    let mut sets = vec![];
-    while let Ok(set) = rx.try_recv()
-    {
-        sets.push(set);
-    }
-    let mut too_many = sets.concat();
-    too_many.truncate(n as usize);
-    return too_many;
-}
+//     }
+// }
