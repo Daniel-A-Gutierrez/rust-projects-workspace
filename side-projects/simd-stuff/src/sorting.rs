@@ -41,6 +41,33 @@ mod test
                 bubble_sort_vec(&mut src.try_into().unwrap());
             });
         }
+
+        /// all knowing sort
+        /// riprip 40ns avg lol bubble sort still sucks  
+        #[bench]
+        fn sort_vec_b(bencher : &mut Bencher)
+        {
+            let mut sample = random_numbers(32,0,100000);
+            
+            bencher.iter(|| 
+            {
+                let mut src = sample.clone();
+                sort_vec(&mut src.try_into().unwrap());
+            });
+        }
+
+        //yeah default sort is 111 ns. 
+        #[bench]
+        fn sort_b(bencher : &mut Bencher)
+        {
+            let mut sample = random_numbers(32,0,100000);
+            
+            bencher.iter(|| 
+            {
+                let mut src = sample.clone();
+                src.sort();
+            });
+        }
         
         //about 200ns
         // 150-200 ns per iter.
@@ -237,7 +264,31 @@ fn bubble_sort_vec(arr : &mut[i32; 32])
     // }
     }
     src.copy_to_slice(arr);
-    
+}
+
+#[inline]
+fn sort_vec(arr : &mut[i32; 32]) 
+{
+    let mut dst = [0;32];
+    let mut maxeq = 1;
+    let a = Simd::from_array(*arr);
+    for i in 0..32
+    {
+        let e = arr[i];
+        let element = Simd::splat(e);
+        let eq = element.simd_eq(a).to_bitmask().count_ones() as usize;
+        let gt = element.simd_gt(a).to_bitmask().count_ones() as usize; //if we know the elements are unique it can be made faster. 
+        dst[gt] = e;
+        maxeq = maxeq.max(eq);
+    }
+    if(maxeq > 1)
+    {
+        for i in 1..32
+        {
+            dst[i] = dst[i-1].max(dst[i]);
+        }
+    }
+    arr.clone_from_slice(&dst);    
 }
 
 fn bubble_sort(arr : &mut [i32])
