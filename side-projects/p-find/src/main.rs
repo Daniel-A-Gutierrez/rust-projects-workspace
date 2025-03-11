@@ -1,11 +1,12 @@
 #![allow(unused_parens)]
 
-/// the goal here was to make a search algo that takes a 
+/// the goal here was to make a search algo that takes a
 /// best guess at each hop, instead of a binary choice.
 /// it does find solutions even at very large data sizes in 3-4 hops, but its still
 /// twice as slow as binary search.
-
-use std::{ops::Range, time::{Duration, Instant}, u32};
+use std::{ops::Range,
+          time::{Duration, Instant},
+          u32};
 
 use rand::{Rng, distributions::Uniform, thread_rng};
 use rayon::prelude::*;
@@ -54,7 +55,7 @@ fn clamp(x: f64, min: f64, max: f64) -> f64
 #[inline]
 fn remap(x: f64, p1: f64, p2: f64, q1: f64, q2: f64) -> f64
 {
-    return x * (q2-q1)/(p2-p1)
+    return x * (q2 - q1) / (p2 - p1);
 }
 
 #[rustfmt::skip]
@@ -70,46 +71,69 @@ fn lerp_search3(q: u32, v: &Vec<u32>) -> Option<usize>
     return exp_find(q, v, pos as usize);
 }
 #[inline]
-fn right_direction(target : i64, value : i64, direction : i64) -> bool
+fn right_direction(target: i64, value: i64, direction: i64) -> bool
 {
-    return (target-value)*direction > 0
+    return (target - value) * direction > 0;
 }
 
-fn ascending_range(a : i64, b : i64) -> Range<usize>
+fn ascending_range(a: i64, b: i64) -> Range<usize>
 {
-    return if b > a { a as usize..b as usize} else { b as usize .. a as usize };
+    return if b > a
+    {
+        a as usize..b as usize
+    }
+    else
+    {
+        b as usize..a as usize
+    };
 }
 
-fn exp_find(q : u32 , v : &Vec<u32>, guess : usize) -> Option<usize>
+fn exp_find(q: u32, v: &Vec<u32>, guess: usize) -> Option<usize>
 {
     let mut pos = guess as i64;
-    let bound = (v.len() -1) as i64;
+    let bound = (v.len() - 1) as i64;
     let mut e = 16;
     //if(v[pos as usize] == q) { return Some(pos as usize); }
-    let mut direction = if(v[pos as usize] > q){-1} else {1};
+    let mut direction = if (v[pos as usize] > q) { -1 } else { 1 };
 
-    if let Some(solution) = v[ascending_range(pos, pos+direction*16)].iter().position(|e| *e == q){return Some(solution);}
+    if let Some(solution) = v[ascending_range(pos, pos + direction * 16)].iter()
+                                                                         .position(|e| *e == q)
+    {
+        return Some(solution);
+    }
 
     //skip more as we move towards it, stopping when we pass it or exhaust the array.
     while let Some(val) = v.get(pos as usize)
     {
-        if(*val == q){ return Some(pos as usize); }
-        if !right_direction(q as i64, *val as i64, direction) {direction *= -1; break;}
-        if (pos == 0 || pos == bound) {return None; }
-        pos = (pos + e* direction).max(0).min(bound);
+        if (*val == q)
+        {
+            return Some(pos as usize);
+        }
+        if !right_direction(q as i64, *val as i64, direction)
+        {
+            direction *= -1;
+            break;
+        }
+        if (pos == 0 || pos == bound)
+        {
+            return None;
+        }
+        pos = (pos + e * direction).max(0).min(bound);
         e <<= 1;
     }
 
-
     e >>= 1;
-
 
     //skip less as we move towards it, turning around when we pass it, until we've decremented to 0 or found it.
     while e > 16
     {
         let val = v[pos as usize];
-        if(val == q){ return Some(pos as usize); }
-        if( !right_direction(q as i64, val as i64, direction)) // if we've passed it, turn around.
+        if (val == q)
+        {
+            return Some(pos as usize);
+        }
+        if (!right_direction(q as i64, val as i64, direction))
+        // if we've passed it, turn around.
         {
             direction *= -1;
         }
@@ -117,12 +141,13 @@ fn exp_find(q : u32 , v : &Vec<u32>, guess : usize) -> Option<usize>
         e >>= 1;
     }
 
-    if( !right_direction(q as i64, v[pos as usize] as i64, direction)) // if we've passed it, turn around.
+    if (!right_direction(q as i64, v[pos as usize] as i64, direction))
+    // if we've passed it, turn around.
     {
         direction *= -1;
     }
-    return v[ ascending_range(pos, pos+e*direction)].iter().position(|e| *e==q);
-
+    return v[ascending_range(pos, pos + e * direction)].iter()
+                                                       .position(|e| *e == q);
 }
 
 ///about the same

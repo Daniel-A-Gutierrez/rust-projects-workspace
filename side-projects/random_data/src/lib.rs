@@ -3,11 +3,11 @@
 use rand::Rng;
 use rand::distr::uniform::Uniform;
 
-pub fn random_numbers(n: u32, min : i32, max : i32) -> Vec<i32>
+pub fn random_numbers(n: u32, min: i32, max: i32) -> Vec<i32>
 {
     let mut rng = rand::rng();
     let mut v = Vec::with_capacity(n as usize);
-    let d = Uniform::new(min,max).unwrap();
+    let d = Uniform::new(min, max).unwrap();
     for _ in 0..n as usize
     {
         v.push(rng.sample(d) as i32);
@@ -16,11 +16,11 @@ pub fn random_numbers(n: u32, min : i32, max : i32) -> Vec<i32>
     return v;
 }
 
-pub fn random_unique_strings(n: u32, strlen : u32) -> Vec<String>
+pub fn random_unique_strings(n: u32, strlen: u32) -> Vec<String>
 {
     //the number of potential strings is about 6E16, too big for u32 but less than u64 int max.
     let (tx, rx) = std::sync::mpsc::channel();
-    let nworkers = (n/100).max(10).min(1);
+    let nworkers = (n / 100).max(10).min(1);
     std::thread::scope(|s| {
         for i in 0..nworkers
         {
@@ -29,7 +29,7 @@ pub fn random_unique_strings(n: u32, strlen : u32) -> Vec<String>
                  let mut set = std::collections::HashSet::<String>::new();
                  let mut rng = rand::rng();
                  let char_rng = Uniform::new(0, 25).unwrap();
-                 let mut buf = Vec::with_capacity(strlen as usize+1);
+                 let mut buf = Vec::with_capacity(strlen as usize + 1);
                  while set.len() < 1 + (n / nworkers) as usize
                  {
                      for _ in 0..strlen - 1
