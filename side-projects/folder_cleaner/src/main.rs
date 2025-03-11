@@ -39,6 +39,7 @@ fn main() -> Result<()>
     clean_folder(cli)
 }
 
+#[rustfmt::skip]
 fn clean_folder(cli : Args) -> Result<()>
 {
     let mut filters = vec![];
@@ -58,7 +59,7 @@ fn clean_folder(cli : Args) -> Result<()>
                                   .collect();
     match &cli.action
     {
-        Action::Delete {} => println!("The following files will be deleted!"),
+        Action::Delete {} => println!("The following files and directories will be deleted!"),
         Action::Move { dst } =>
         {
             if (dst.exists())
@@ -115,8 +116,7 @@ fn clean_folder(cli : Args) -> Result<()>
                 };
                 match res
                 {
-                    Ok(_) =>
-                    {}
+                    Ok(_) => {}
                     Err(e) => println!("Error deleting {:?}, {:?}", path, e),
                 }
             }
