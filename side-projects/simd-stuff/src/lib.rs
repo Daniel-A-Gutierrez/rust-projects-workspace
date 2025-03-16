@@ -2,10 +2,12 @@
            test,
            array_chunks,
            portable_simd,
-           generic_const_exprs)]
+           generic_const_exprs,
+           select_unpredictable)]
 #![allow(unused_parens, non_snake_case, dead_code)]
 #![feature(trait_alias)]
 mod sorting;
+mod horizontal;
 use random_data::random_numbers;
 
 use std::{cmp::Ordering,
