@@ -1,0 +1,19 @@
+#[cfg(test)]
+mod test
+{
+    extern crate test;
+    use test::Bencher;
+    #[test]
+    fn tester()
+    {
+
+    }
+
+    #[bench]
+    fn bencher(b : &mut Bencher) 
+    {
+        b.iter(||{
+
+            });
+    }
+}
