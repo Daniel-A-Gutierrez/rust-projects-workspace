@@ -1,3 +1,5 @@
+#![allow(unused, unused_parens)]
+
 pub fn load_test() -> (Vec<&'static str>, Vec<&'static str>)
 {
     let available = vec!["r", "wr", "b", "g", "bwu", "rb", "gb", "br"];

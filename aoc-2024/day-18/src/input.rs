@@ -1,3 +1,5 @@
+#![allow(unused, unused_parens)]
+
 #[rustfmt::skip]
 pub fn load_test() -> Vec<(usize, usize)>
 {

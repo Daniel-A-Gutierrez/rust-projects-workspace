@@ -1,3 +1,5 @@
+#![allow(unused, unused_parens)]
+
 use std::{clone, f32, iter::from_fn};
 
 // The Nature of Code

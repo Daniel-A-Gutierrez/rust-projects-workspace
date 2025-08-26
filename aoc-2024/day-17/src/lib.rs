@@ -1,4 +1,4 @@
-#![allow(unused_parens, unused)]
+#![allow(unused_parens, unused, non_snake_case)]
 mod inputs;
 use anyhow::{anyhow, bail, Result};
 use inputs::*;

@@ -1,3 +1,5 @@
+#![allow(unused, unused_parens)]
+
 // The Nature of Code
 // Daniel Shiffman
 // http://natureofcode.com

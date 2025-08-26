@@ -1,3 +1,4 @@
+#![allow(unused_parens)]
 mod inputs;
 use anyhow::Result;
 use inputs::*;

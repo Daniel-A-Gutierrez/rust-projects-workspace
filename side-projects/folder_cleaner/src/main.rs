@@ -1,14 +1,13 @@
 //cli tool to walk a directory and delete all the files that match a criteria
 //works on filename (regex), file size, and extension (exact match)
 //in retrospect i couldve done this easily in bash...
-#![allow(unused_parens)]
 #![feature(test)]
+#![allow(unused, unused_parens, unused_imports)]
 mod args;
 use anyhow::Result;
 use args::*;
 use clap::Parser;
 use regex::Regex;
-use std::fs::{File, OpenOptions};
 use std::io::stdin;
 use std::path::PathBuf;
 use walkdir::{DirEntry, WalkDir};

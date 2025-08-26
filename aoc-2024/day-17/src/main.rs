@@ -1,4 +1,6 @@
 #![feature(test)]
+#![allow(unused, unused_parens)]
+
 use library::{part1, part2};
 fn main() -> Result<(), anyhow::Error>
 {
