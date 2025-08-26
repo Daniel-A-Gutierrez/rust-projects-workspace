@@ -16,6 +16,8 @@ mod test
 
     mod benchmarks
     {
+        use std::hint::select_unpredictable;
+
         use super::*;
         //550 ns
         #[bench]
@@ -163,7 +165,8 @@ mod test
                     for e in 0..CHUNK_SIZE 
                     {
                         min = chunk[e].min(min);
-                        i = (min == chunk[e]).select_unpredictable(e,i);
+                        
+                        i = select_unpredictable(min == chunk[e], e, i);
                     }
                     x += i;
                 }
@@ -281,7 +284,7 @@ mod test
                     for c in 0..CHUNK_SIZE
                     {
                         min = samples[c][i].min(min);
-                        mi = (min == samples[c][i]).select_unpredictable(c,mi);
+                        mi = select_unpredictable(min == samples[c][i], c,mi);
                     }
                     x += mi;
                 }
