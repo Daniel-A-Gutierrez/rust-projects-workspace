@@ -5,6 +5,8 @@ edition = "2024"
 
 [dependencies]
 nannou = "0.19.0"
+petgraph = "0.8.2"
+rapier3d = "0.29.0"
 
 [[example]]
 path="src/graph_visualizer.rs"
@@ -14,3 +16,6 @@ name="graph_visualizer"
 path="src/sketch1.rs"
 name="sketch1"
 
+[lib]
+path="src/lib/mod.rs"
+name="lib"

@@ -7,14 +7,14 @@ use std::{clone, f32, iter::from_fn};
 // http://natureofcode.com
 //
 // Example 1-10: Motion 101 Acceleration
-use nannou::{geom::Scalar, prelude::*, };
+use nannou::{geom::Scalar, prelude::*};
 
 const EDGE_LENGTH: f32 = 500f32;
 const MAX_VELOCITY: f32 = 100f32;
 const DRAG_COEF: f32 = 0.5f32;
 const TIME_STEP: f32 = 0.004f32;
-const PI2 : f32 = f32::consts::PI * 2.0;
-const NODE_REPULSION : f32 = 1.0;
+const PI2: f32 = f32::consts::PI * 2.0;
+const NODE_REPULSION: f32 = 1.0;
 fn main()
 {
     nannou::app(model).update(update).run();
@@ -59,9 +59,7 @@ impl Graph
 {
     fn new(nodes: Vec<Node>, edges: Vec<Edge>, bounds: Rect) -> Self
     {
-        Graph { nodes,
-                edges,
-                bounds }
+        Graph { nodes, edges, bounds }
     }
 
     fn new_random(n: usize, e: usize, bounds: Rect) -> Self
@@ -84,29 +82,35 @@ impl Graph
             {
                 to = random_range(0, n);
             }
-            edges.push(Edge { from,
-                              to,
-                              force: 0.0 });
+            edges.push(Edge { from, to, force: 0.0 });
         }
-        let mut g =  Graph { nodes,
-                       edges,
-                       bounds };
+        let mut g = Graph { nodes, edges, bounds };
         return g;
     }
 
-    fn new_full(n:usize, bounds:Rect)-> Self
+    fn new_full(n: usize, bounds: Rect) -> Self
     {
-        let nodes = vec![Node{position : Vec2::ZERO, velocity : Vec2::ZERO, accel : Vec2::ZERO}; n];
+        let nodes = vec![
+            Node { position: Vec2::ZERO,
+                   velocity: Vec2::ZERO,
+                   accel:    Vec2::ZERO, };
+            n
+        ];
         let mut edges = vec![];
-        for i in 0..n 
+        for i in 0..n
         {
-            for j in 0..n 
+            for j in 0..n
             {
-                if i == j {continue}
-                edges.push(Edge{from : i , to : j, force : 0.0 });
+                if i == j
+                {
+                    continue;
+                }
+                edges.push(Edge { from:  i,
+                                  to:    j,
+                                  force: 0.0, });
             }
         }
-        return Graph{nodes,edges,bounds};
+        return Graph { nodes, edges, bounds };
     }
 
     fn update(&mut self)
@@ -123,7 +127,6 @@ impl Graph
         }
         for i in 0..self.nodes.len()
         {
-            
             let (before, after) = self.nodes.split_at_mut(i);
             let before = before.iter_mut();
             let mut after = after.iter_mut();
@@ -139,31 +142,31 @@ impl Graph
             //position update
             node.position += v2fmul(node.velocity, TIME_STEP);
 
-            node.position = Vec2::new(node.position.x
-                                          .clamp(self.bounds.left(), self.bounds.right()),
-                                      node.position.y
-                                          .clamp(self.bounds.bottom(), self.bounds.top()));
+            node.position = Vec2::new(node.position.x.clamp(self.bounds.left(), self.bounds.right()),
+                                      node.position.y.clamp(self.bounds.bottom(), self.bounds.top()));
             node.accel = Vec2::ZERO;
         }
     }
 
     fn position_grid(&mut self)
     {
-        let nr = ( self.nodes.len() as f32 ).sqrt();
-        for (i,node) in self.nodes.iter_mut().enumerate()
+        let nr = (self.nodes.len() as f32).sqrt();
+        for (i, node) in self.nodes.iter_mut().enumerate()
         {
-            node.position = Vec2::new(self.bounds.left(), self.bounds.bottom()) + 
-                             Vec2::new(     (self.bounds.w() / nr) * (i % nr as usize) as f32,
-                                            (i / nr as usize) as f32 * self.bounds.h());
+            node.position = Vec2::new(self.bounds.left(), self.bounds.bottom())
+                            + Vec2::new((self.bounds.w() / nr) * (i % nr as usize) as f32,
+                                        (i / nr as usize) as f32 * self.bounds.h());
         }
     }
 
-    fn position_circle(&mut self, radius : f32)
+    fn position_circle(&mut self, radius: f32)
     {
         let n = self.nodes.len();
-        for (i,node) in self.nodes.iter_mut().enumerate()
+        for (i, node) in self.nodes.iter_mut().enumerate()
         {
-            node.position = v2fmul(Vec2::new( f32::cos(PI2 * i as f32 / n as f32) , f32::sin(PI2 * i as f32 / n as f32) ), radius);
+            node.position = v2fmul(Vec2::new(f32::cos(PI2 * i as f32 / n as f32),
+                                             f32::sin(PI2 * i as f32 / n as f32)),
+                                   radius);
         }
     }
 
@@ -181,24 +184,25 @@ impl Graph
             draw.line()
                 .start(self.nodes[edge.from].position)
                 .end(self.nodes[edge.to].position)
-                .hsl(edge.force/EDGE_LENGTH/2.0, 1.0, 0.5);
+                .hsl(edge.force / EDGE_LENGTH / 2.0, 1.0, 0.5);
         }
         for node in self.nodes.iter()
         {
-            draw.ellipse().xy(node.position).w_h(5.0, 5.0).stroke(BLACK).stroke_weight(2.0).gray(0.0);
+            draw.ellipse()
+                .xy(node.position)
+                .w_h(5.0, 5.0)
+                .stroke(BLACK)
+                .stroke_weight(2.0)
+                .gray(0.0);
         }
     }
 }
 
 fn model(app: &App) -> Model
 {
-    let _window = app.new_window()
-                     .size(1920, 1080)
-                     .view(view)
-                     .build()
-                     .unwrap();
-    let mut graph = Graph::new_full(24, app.window_rect());//new_random(10, 45, app.window_rect());
-    graph.position_circle(EDGE_LENGTH/4.0);
+    let _window = app.new_window().size(1920, 1080).view(view).build().unwrap();
+    let mut graph = Graph::new_full(24, app.window_rect()); //new_random(10, 45, app.window_rect());
+    graph.position_circle(EDGE_LENGTH / 4.0);
     Model { graph }
 }
 
@@ -208,7 +212,7 @@ fn update(app: &App, m: &mut Model, _update: Update)
     m.graph.update();
     if app.keys.down.contains(&Key::R)
     {
-        m.graph.position_circle(EDGE_LENGTH/4.0);
+        m.graph.position_circle(EDGE_LENGTH / 4.0);
     }
 }
 
@@ -223,7 +227,7 @@ fn view(app: &App, m: &Model, frame: Frame)
     {
         m.graph.nodes.iter().for_each(|n| println!("{}", n.position));
     }
-    
+
     //println!("{:?}",app.window_rect());
     m.graph.display(&draw);
 
