@@ -1,0 +1,134 @@
+
+For each number in a sequence S[0] .. S[N-1] of length N 
+We only want the bits between the first and last 1's. 
+
+So each number becomes (payload, leading 0s, trailing 0s) 
+For a 64 bit number both leading and trailing are 6 bits so thats 12 bits at worst. 
+Not worth it if we store that per number, but if many numbers share that we can lump them under one header. 
+
+what if we make this tree like? 
+
+at the top we have the nodes that have the fewest leading zeros
+then the ones that have a few more are its children? 
+
+also what if we store the bytes individually ? Like split a number into its individual bytes? 
+I think this becomes entropy encoding. 
+We're taking all the symbols and distinguisihing them by their place in the number. 
+
+then we know the bit length of each symbol is log2(nth_column_size) for byte N . 
+
+so a column looks like LEN (1 byte) followed by LEN unique symbols (1 byte each) .
+For an 8 byte number that adds 16 bytes of table header.  
+
+We follow that by N (8 bytes) then N integers comprised of symbols of length according to the table column lengths. 
+
+Lets do math. 
+
+Word Size
+Column Size
+N Words
+
+Worst case for a single column : every value is covered, so the index just becomes the number. In this case there's an overhead of 258 bytes for no payoff. 
+If we sort them from most to least frequent, then we end up doing huffman encoding. 
+
+What if we did a dynamic huffman tree where we modified the tree as we went through decoding? Sounds suuper slow lol. 
+Can we do like a recursive huffman tree to expand the symbol length? 
+So given a prefix, how strongly do we need to predict the next character to bother storing it? 
+
+lets say we have 8 symbols A-H in a string S . If theyre uniformly distributed P( S[N] | S[N-1] ) = 1/8
+If we stored symbol lengths of 2, each has 64 possibilities, so 6 bits. 
+Our huffman tree ends up as a binary tree I think so it has a height of 6.
+Each symbol is still encoded as 6 bits afterward, so no improvement, and we have to send the tree. 
+
+If we maintain the same overall uniform distribution of symbols but the sequence is just 
+'ABCDEFGH' over and over again, P(B | A) = 1 , P(C | B) = 1 , etc.
+If each 'context' gets its own tree, then each huffman tree is just 1 row : 1=Symbol so 1 bit. 
+
+Since each symbol completely predicts the next a perfect encoding would just be 'how many times do we repeat "ABCDEFG". 
+so ln(N/8) + (8 if we're including the tree) . Our compressor would still spend 1 bit per character, so itd be N bits per byte, for a 7/8ths compression ratio, but 
+then we have to send the tree too so ... yea. Not sure how we're even encoding that but its a minimum nlogn(unique characters) since theyre in a tree. 
+
+So the basics here are : 
+A top level tree has a child for every unique combination of N bits that occur.
+Each child is a huffman tree that decodes the next bits of the compressed text.
+
+There's a problem though - if we're relying on the context working on bit granularity, then the huffman tree needs to code for as many bits as possible.
+If the minimum is 1 then we cant code for just 1 bit - even if that means we predicted it perfectly, we haven't compressed anything. 
+
+OK
+ima go get a burger I think
+i think the algorithm can operate in 2 modes 
+in mode 1 it is optimizing for the shortest (encoded str + tree)
+in mode 2 it is optimizing purely for the shortest encoded str, BUT tree has to include all possible symbols, even the ones not in the source.
+
+in both we can tokenize multiple symbols . When doing so we reduce the frequency of its component symbols by its occurences., so if 'a' was 10 and 'b' was 10 and 'ab' occurred 8 times, 
+'ab' is inserted into the tree with frequency 8 and 'a' and 'b' become frequency 2. 
+
+if we do this greedily I dont think we gain anything... I think what we want is uniformity among the symbols. 
+
+lets consider
+
+ababababacacbb : a:6 , b : 6, c : 2 
+so our huffman tree is (a,(b,c)) - 9 bytes
+and our encoded string is thus 6 * 1 + 6 * 2 + 2 * 2 = 22 bits
+we have a total of 9 * 8 + 22 = 94 bits then. 
+from here we consider tokens we can make, lets consider some strategies
+1. follows most frequent
+2. preceeds least frequent
+substrings starting with a would be : ab : 4 , ac : 2
+removing 4 ab's could save 4 * 1+4 * 2 = 12 bits
+adding 'ab' to the huffman tree at that point would make the frequencies ab: 4, a : 2, b : 2, c : 2
+(ab,(a,(b,c))) , resulting in a compressed length of 4 * 1 + 2 * 2 + 2 * 3 + 2 * 3 = 4 + 4 + 6 + 6 = 20
+so we save 2 bits so we do it. 
+Our tree is now 14 bytes, and our string is 20 , so we're 132 bits long - way worse than base huffman. 
+we repeat the process, considering the tokens that could be made starting with 'ab'. 
+'aba' can be made twice, reducing ab from 4 occurances to 2, saving 2 bits. 
+
+maybe we should consider all options when we do these parts?
+a's tokens could be 'ac'. thats it. it'd occur twice, cutting 12 bits.
+b's tokens would be 'bb' occuring once, cutting 6 bits. 
+
+we'll try 'ac' first . our new frequencies are ab : 4, ac: 2, b: 2 
+(ab,(ac,b)) : 11 bytes
+our tokenized string is 'ab' 'ab' 'ab' 'ab' 'ac' 'ac' 'b' 'b' - 12 bits, 
+so our shortest with tokenization is 100 bits. 
+
+'abab' may save us up to 2 bits
+'bb' saves us up to 4 bits, so we go 'bb'
+(ab,(ac,bb)) : 12 bytes
+our string is now 4 + 4 + 2 = 10 bits
+its worth noting that our tree is now 12 bytes, so if we were sending it along this would be a bad move. 
+Our original string was only 14 bytes so we havent actually saved much.
+
+Here's an idea - what if we did like, tiers of huffman trees?
+Or used a pre-computed huffman tree to store the serialized trees? 
+Lets just do a tier 1 huffman tree on our current tree. 
+( : 2  ',' : 2 , ')': 2, a : 2, b : 3 , c : 1 
+Ok it was really ugly . BUT , basically the bit lengths are 
+(  )  ,  a  b c 
+2,2,2,3,2,2 
+So our serilized huffman tree goes from 12 bytes to 26 bits. 
+So our total length is 36 bits! 
+But how does that compare to tier 1 huffman? 
+21 bits + 22 bits = 43 bits. So we made savings!
+
+I feel like I could try some more gimmicks here.
+I could have a leader byte be 'dialect' for distinguishing things like literature from code for the precomputed tree 
+compressing the serialized tree. 
+And then who's to say it has to be a tier 1 tree? 
+Without restrictions it'll just memorize the training data though
+So maybe for training ...
+Create a naieve tier 1 tree trained on arbitrary data.
+Adjust that tree so ( , ) , and ',' are each set to a frequency of 20%, as they would be in a 1 character huffman tree.
+Use that tree to train a N character huffman tree, balancing its serialized length against the tree compressed using the prototype huffman tree. 
+Do that alot and get lots of samples of N character huffman trees. 
+Train a N character precomputed tree on all the N character huffman trees.
+Create new compressed versions, training on the source data again but using the new tree to compress the serialized tree and balancing against that. 
+Train a tertiary precomputed tree against the now optimized serialized trees. 
+Repeat ad nauseum? 
+
+
+so our little huffman tree would be serialized to 
+
+Each symbol strongly predicts the next though. So what if we had a language or coding that expanded to an operation? 
+Like Repeat(Lit(256), 

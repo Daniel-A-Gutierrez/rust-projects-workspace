@@ -1,6 +1,5 @@
 #![feature(iter_array_chunks,
            test,
-           array_chunks,
            portable_simd,
            generic_const_exprs,
            select_unpredictable)]
@@ -50,10 +49,10 @@ fn compare_arrays3(a: &[i32; 1024], b: &[i32; 1024]) -> (i32, i32, i32)
 {
     let mut lt: Simd<i32, 16> = Simd::from_array([0; 16]);
     let mut gt: Simd<i32, 16> = Simd::from_array([0; 16]);
-    for (a, b) in a.array_chunks::<16>().zip(b.array_chunks::<16>())
+    for (a, b) in a.iter().map(|&e|e).array_chunks::<16>().zip(b.iter().map(|&e|e).array_chunks::<16>())
     {
-        let va = Simd::from_array(*a);
-        let vb = Simd::from_array(*b);
+        let va = Simd::from_array(a);
+        let vb = Simd::from_array(b);
         let gt_mask = va.simd_gt(vb);
         let lt_mask = va.simd_lt(vb);
         gt += gt_mask.to_int();
@@ -71,10 +70,10 @@ fn compare_arrays4<const VLEN: usize>(a: &[i32; 1024], b: &[i32; 1024]) -> (i32,
 {
     let mut lt: Simd<i32, VLEN> = Simd::from_array([0; VLEN]);
     let mut gt: Simd<i32, VLEN> = Simd::from_array([0; VLEN]);
-    for (a, b) in a.array_chunks::<VLEN>().zip(b.array_chunks::<VLEN>())
+    for (a, b) in a.iter().map(|&e|e).array_chunks::<VLEN>().zip(b.iter().map(|&e|e).array_chunks::<VLEN>())
     {
-        let va = Simd::from_array(*a);
-        let vb = Simd::from_array(*b);
+        let va = Simd::from_array(a);
+        let vb = Simd::from_array(b);
         let gt_mask = va.simd_gt(vb);
         let lt_mask = va.simd_lt(vb);
         gt += gt_mask.to_int();
@@ -105,14 +104,14 @@ fn compare_strings<const VLEN: usize>(s1: &str, s2: &str) -> Ordering
 {
     let bytes1 = s1.as_bytes();
     let bytes2 = s2.as_bytes();
-    let chunks1 = bytes1.array_chunks::<VLEN>();
-    let chunks2 = bytes2.array_chunks::<VLEN>();
-    let r1 = chunks1.remainder();
-    let r2 = chunks2.remainder();
+    let chunks1 = bytes1.iter().map(|&e|e).array_chunks::<VLEN>();
+    let chunks2 = bytes2.iter().map(|&e|e).array_chunks::<VLEN>();
+    let r1 = chunks1.clone().into_remainder();
+    let r2 = chunks2.clone().into_remainder();
     for (va, vb) in chunks1.zip(chunks2)
     {
-        let va = Simd::from_array(*va);
-        let vb = Simd::from_array(*vb);
+        let va = Simd::from_array(va);
+        let vb = Simd::from_array(vb);
         let mask = va.simd_ne(vb);
         if (mask.any())
         {
@@ -120,7 +119,8 @@ fn compare_strings<const VLEN: usize>(s1: &str, s2: &str) -> Ordering
             return va[idx].cmp(&vb[idx]);
         }
     }
-    return r1.cmp(&r2);
+
+    return r1.cmp(r2);
 }
 
 struct IStringPool
@@ -182,9 +182,9 @@ fn compare_string_lt<const VLEN: usize>(needle: &str, tests: &IStringPool) -> i6
     let needle_preview = unsafe { IStringPool::make_preview(needle) };
     let needles: Simd<u64, VLEN> = Simd::splat(needle_preview);
     let mut counter = Simd::splat(0);
-    for (chunk_idx, schunk) in tests.previews.array_chunks::<VLEN>().enumerate()
+    for (chunk_idx, schunk) in tests.previews.iter().map(|&e|e).array_chunks::<VLEN>().enumerate()
     {
-        let hay = Simd::from_slice(schunk);
+        let hay = Simd::from_slice(&schunk);
         let mut ltmask = hay.simd_lt(needles);
         let mut eqmask = hay.simd_eq(needles);
         while (eqmask.any() && needle.len() > 8)

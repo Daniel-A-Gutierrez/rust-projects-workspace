@@ -43,17 +43,19 @@ mod test
             let mut x = 0;
             b.iter(||
             {
-                let chunks = sample.array_chunks::<CHUNK_SIZE>();
-                let remainder = chunks.remainder();
+                let chunks = sample.iter()
+                                   .map(|&e|e)
+                                   .array_chunks::<CHUNK_SIZE>();
+                let remainder = chunks.clone().into_remainder();
                 let mut collector = i32::MAX;
                 for chunk in chunks 
                 {
-                    let s = Simd::from_array(*chunk);
+                    let s = Simd::from_array(chunk);
                     collector = collector.min(s.reduce_min());
                 }
                 for r in remainder
                 {
-                    collector = collector.min(*r);
+                    collector = collector.min(r);
                 }
                 x = collector;
             });
@@ -69,17 +71,19 @@ mod test
             let mut x = 0;
             b.iter(||
             {
-                let chunks = sample.array_chunks::<CHUNK_SIZE>();
-                let remainder = chunks.remainder();
+                let chunks = sample.iter()
+                                   .map(|&e|e)
+                                   .array_chunks::<CHUNK_SIZE>();
+                let remainder = chunks.clone().into_remainder();
                 let mut collector = Simd::<i32, CHUNK_SIZE>::splat(i32::MAX);
                 for chunk in chunks 
                 {
-                    collector = collector.simd_min(Simd::from_array(*chunk));
+                    collector = collector.simd_min(Simd::from_array(chunk));
                 }
                 let mut min = collector.reduce_min();
                 for r in remainder
                 {
-                    min = min.min(*r);
+                    min = min.min(r);
                 }
                 x = min;
             });
@@ -107,17 +111,19 @@ mod test
             let mut x = 0;
             b.iter(||
             {
-                let chunks = sample.array_chunks::<CHUNK_SIZE>();
-                let remainder = chunks.remainder();
+                let chunks = sample.iter()
+                                   .map(|&e|e)
+                                   .array_chunks::<CHUNK_SIZE>();
+                let remainder = chunks.clone().into_remainder();
                 let mut collector = 0;
                 for chunk in chunks 
                 {
-                    let s = Simd::from_array(*chunk);
+                    let s = Simd::from_array(chunk);
                     collector += (s.reduce_sum());
                 }
                 for r in remainder
                 {
-                    collector += (*r);
+                    collector += (r);
                 }
                 x = collector;
             });
@@ -133,17 +139,19 @@ mod test
             let mut x = 0;
             b.iter(||
             {
-                let chunks = sample.array_chunks::<CHUNK_SIZE>();
-                let remainder = chunks.remainder();
+                let chunks = sample.iter()
+                                   .map(|&e|e)
+                                   .array_chunks::<CHUNK_SIZE>();
+                let remainder = chunks.clone().into_remainder();
                 let mut collector = Simd::<i32, CHUNK_SIZE>::splat(0);
                 for chunk in chunks 
                 {
-                    collector = collector + (Simd::from_array(*chunk));
+                    collector = collector + (Simd::from_array(chunk));
                 }
                 let mut min = collector.reduce_sum();
                 for r in remainder
                 {
-                    min = (*r);
+                    min = (r);
                 }
                 x = min;
             });
@@ -158,7 +166,9 @@ mod test
             let mut x = 0;
             b.iter(||
             {
-                for chunk in sample.array_chunks::<CHUNK_SIZE>()
+                for chunk in sample.iter()
+                                   .map(|&e|e)
+                                   .array_chunks::<CHUNK_SIZE>()
                 {
                     let mut i = 0 ; 
                     let mut min = i32::MIN;
@@ -184,9 +194,11 @@ mod test
             let mut x = 0;
             b.iter(||
             {
-                for chunk in sample.array_chunks::<CHUNK_SIZE>()
+                for chunk in sample.iter()
+                                   .map(|e| *e)
+                                   .array_chunks::<CHUNK_SIZE>()
                 {
-                    let s = Simd::from_array(*chunk);
+                    let s = Simd::from_array(chunk);
                     let min = Simd::splat(s.reduce_min());
                     let i = min.simd_eq(s).to_bitmask().leading_zeros() - (64-CHUNK_SIZE) as u32;
                     x += i;

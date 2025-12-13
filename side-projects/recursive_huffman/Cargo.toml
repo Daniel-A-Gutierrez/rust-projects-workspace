@@ -1,0 +1,12 @@
+[package]
+name = "recursive_huffman"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+path = "src/lib.rs"
+name = "recursive_huffman"
+
+[dependencies]
+bit-vec = "0.8.0"
+bitstream-io = "4.9.0"
