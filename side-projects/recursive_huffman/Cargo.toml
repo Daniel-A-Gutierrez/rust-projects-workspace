@@ -8,5 +8,6 @@ path = "src/lib.rs"
 name = "recursive_huffman"
 
 [dependencies]
+anyhow = "1.0.100"
 bit-vec = "0.8.0"
 bitstream-io = "4.9.0"

@@ -5,60 +5,12 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "type": "lldb",
+            "name": "Debug",
+            "type": "lldb-mi",
             "request": "launch",
-            "name": "Debug unit tests in library 'library'",
-            "cargo": {
-                "args": [
-                    "test",
-                    "--no-run",
-                    "--lib",
-                    "--package=day-10"
-                ],
-                "filter": {
-                    "name": "library",
-                    "kind": "lib"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug executable 'binary'",
-            "cargo": {
-                "args": [
-                    "build",
-                    "--bin=binary",
-                    "--package=day-10"
-                ],
-                "filter": {
-                    "name": "binary",
-                    "kind": "bin"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug unit tests in executable 'binary'",
-            "cargo": {
-                "args": [
-                    "test",
-                    "--no-run",
-                    "--bin=binary",
-                    "--package=day-10"
-                ],
-                "filter": {
-                    "name": "binary",
-                    "kind": "bin"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
+            "target": "./bin/executable",
+            "cwd": "${workspaceRoot}",
+            "valuesFormatting": "parseText"
         }
     ]
 }
