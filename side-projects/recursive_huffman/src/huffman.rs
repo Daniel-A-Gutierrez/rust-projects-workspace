@@ -14,6 +14,8 @@ use std::cmp::{self, Reverse};
 use std::collections::{HashMap, BinaryHeap};
 use bit_vec::BitVec;
 
+use crate::tree::BinaryTree;
+
 #[derive(Eq, Debug)]
 pub enum HuffmanTree {
     Leaf(u8, u64),
@@ -141,7 +143,20 @@ impl HuffmanTree {
             }
         }
         walker(&self, &mut table, BitVec::new());
-        return HuffmanCoder{ encoder: table, decoder : self}; 
+        return HuffmanCoder{ encoder: table, decoder : self.to_binary_tree()}; 
+    }
+
+    ///discard frequency information
+    fn to_binary_tree(self) -> BinaryTree<u8>{
+        fn walker(tree : HuffmanTree) -> BinaryTree<u8>{
+            match tree {
+                HuffmanTree::Leaf(byte, _) => BinaryTree::Leaf(byte),
+                HuffmanTree::Node(l,r) => {
+                    BinaryTree::Node(Box::new(walker(*l)), Box::new(walker(*r)))
+                }
+            }
+        }
+        return walker(self);
     }
     
 
@@ -167,9 +182,10 @@ impl HuffmanTree {
 #[derive(Debug)]
 pub struct HuffmanCoder 
 {
+    //i'll need a proper map eventually
     encoder: Vec<BitVec>,
-    //decoder is sorted
-    decoder: HuffmanTree
+
+    decoder: BinaryTree<u8>
 }
 
 impl HuffmanCoder 
@@ -197,18 +213,18 @@ impl HuffmanCoder
         let mut output = vec![];
         for bit in src {
             match state {
-                HuffmanTree::Leaf(byte,_) => {
+                BinaryTree::Leaf(byte) => {
                     output.push(*byte);
                     state = &self.decoder;
                 }
-                HuffmanTree::Node(zero,one) => {
+                BinaryTree::Node(zero,one) => {
                     state = if bit {one} else {zero};
                     match state {
-                        HuffmanTree::Leaf(byte,_) => { 
+                        BinaryTree::Leaf(byte) => { 
                             output.push(*byte); 
                             state = &self.decoder;
                         }
-                        HuffmanTree::Node(_,_) => {}
+                        BinaryTree::Node(_,_) => {}
                     }
                 }
             }
@@ -217,26 +233,20 @@ impl HuffmanCoder
         return Ok(output);
     }
 
-    pub fn to_string(&self) -> String{
-        fn walker(tree : &HuffmanTree) -> String {
-            return match tree {
-                HuffmanTree::Leaf(byte, _) => format!("{}", byte),
-                HuffmanTree::Node(zero,one) => format!("({},{})",walker(zero), walker(one))
-            };
-        }
-        return walker(&self.decoder);
+    pub fn to_string(&self) -> String {
+        return self.decoder.to_string();
     }
 
     pub fn to_bytes(&self) -> Vec<u8>{
-        fn walker(tree : &HuffmanTree) -> Vec<u8> {
+        fn walker(tree : &BinaryTree<u8>) -> Vec<u8> {
             return match tree {
-                HuffmanTree::Leaf(byte, _) => {
+                BinaryTree::Leaf(byte) => {
                     match byte{
                         40|41|44|92 => {vec![92,*byte]} //escape (),\ with a \
                         _ => {vec![*byte]} 
                     }
                 },
-                HuffmanTree::Node(zero,one) => {
+                BinaryTree::Node(zero,one) => {
                     let mut v = vec![40]; 
                     v.extend(walker(zero));
                     v.push(44);
@@ -247,6 +257,30 @@ impl HuffmanCoder
             };
         }
         return walker(&self.decoder);
+    }
+
+    pub fn from_string(s : &str) -> Result<(Self, &str), anyhow::Error>
+    {
+        let binary_tree = BinaryTree::<u8>::from_string(s)?;
+        let mut encoder = vec![BitVec::new();256];
+        fn walker(tree: &BinaryTree<u8>, table : &mut Vec<BitVec>, prev : BitVec) {
+            match tree {
+                &BinaryTree::Leaf(ref elem) => {
+                    table[*elem as usize] = prev;
+                },
+                &BinaryTree::Node(ref zero, ref one) => {
+                    let mut zero_bits = prev.clone();
+                    zero_bits.push(false);
+                    walker(zero, table, zero_bits);
+                    let mut one_bits = prev;
+                    one_bits.push(true);
+                    walker(one, table, one_bits);
+                }
+            }
+        }
+        walker(&binary_tree.0, &mut encoder, BitVec::new());
+        return Ok((Self{encoder, decoder: binary_tree.0}, binary_tree.1));
+
     }
 }
 

@@ -1,10 +1,12 @@
-use std::str::FromStr;
-use anyhow::{anyhow,ensure,bail,Result};
+#![allow(unused)]
+use std::{fmt::Display, str::FromStr};
+use anyhow::{anyhow,bail,Result};
 
-#[derive(Debug)]
-enum BinaryTree<T>{
+/// since each internal node needs to have 2 children, it's always also a valid huffman tree.
+#[derive(Debug,PartialEq, PartialOrd)]
+pub enum BinaryTree<T>{
     Leaf(T),
-    Node(Option<Box<BinaryTree<T>>>, Option<Box<BinaryTree<T>>>)
+    Node(Box<BinaryTree<T>>, Box<BinaryTree<T>>)
 }
 
 //the result<result> is for severity - outer signals 'its fucked', inner is just 
@@ -22,7 +24,7 @@ where T: Clone + Sized + FromStr,
         }
         else { 
             let tree = Self::try_parse_leaf(s)?;
-            if let (Ok(Some(t)),s) = tree {
+            if let (Ok(t),s) = tree {
                 return Ok((*t,s));
             }
             else { bail!("Failed to parse and we don't know why") }
@@ -31,7 +33,7 @@ where T: Clone + Sized + FromStr,
 
     //must start with ( and end with ), and contain a , 
     fn try_parse_node(mut s : &str) -> Result<(Result<BinaryTree<T>>, &str)>{
-        if s.len() == 0 {return Ok((Ok(BinaryTree::Node(None, None)), &s));}
+        if s.len() == 0 {bail!("Expecting ( , got {s}");}//{return Ok((Ok(BinaryTree::Node(None, None)), &s));}
         if !s.starts_with('(') {
             return Ok((Err(anyhow!("Expected str to start with ( : {}",s)),s));
         }
@@ -50,7 +52,7 @@ where T: Clone + Sized + FromStr,
             let left = Self::try_parse_node(s)?;
             if let (Ok(t),pstr) = left {
                 s = pstr;
-                l_node = Some(Box::new(t));
+                l_node = Box::new(t);
             }
             else { bail!("Failed to parse left as node or leaf : {}",s);}
         }
@@ -70,13 +72,13 @@ where T: Clone + Sized + FromStr,
             let right = Self::try_parse_node(s)?;
             if let (Ok(t),pstr) = right {
                 s = pstr;
-                r_node = Some(Box::new(t));
+                r_node = Box::new(t);
             }
             else { bail!("Failed to parse right as node or leaf : {}",s);}
         }
         dbg!(s);
-        if !s.ends_with(')') {
-            return Ok((Err(anyhow!("Expected str to end with ) : {s}")),s));
+        if !s.starts_with(')') {
+            return Ok((Err(anyhow!("Expected remaining str to start with ) : {s}")),s));
         }
         s = &s[1..];
         dbg!(s);
@@ -92,9 +94,9 @@ where T: Clone + Sized + FromStr,
     //if it starts with , its a None leaf
     //terminates at first occurance of unescaped (,)
     //error if we have a valid leaf text but T fails to parse from it.
-    fn try_parse_leaf(mut s : &str) -> Result<(Result<Option<Box<BinaryTree<T>>>>,&str)>{
+    fn try_parse_leaf(mut s : &str) -> Result<(Result<Box<BinaryTree<T>>>,&str)>{
         if s.starts_with("("){return Ok((Err(anyhow!("Unexpected ( starting leaf: {s}")), s));}
-        if s.starts_with(","){return Ok((Ok(None),&s[1..]));}
+        if s.starts_with(","){bail!("All nodes must have 2 children.")}
         if s.starts_with(")"){return Ok((Err(anyhow!("Empty nodes not allowed : {s}")), s));}
         if s.len() == 0 {return Err(anyhow!("Unexpected EOF"))};
         let mut prev = &s[..0];
@@ -111,10 +113,22 @@ where T: Clone + Sized + FromStr,
         }
         let t : T = T::from_str(prev).map_err(|_| 
                                         anyhow!("failed to parse {} as T", prev))?;
-        return Ok((Ok(Some(Box::new(BinaryTree::Leaf(t)))),s ));
+        return Ok((Ok(Box::new(BinaryTree::Leaf(t))),s ));
     }
 }
 
+impl<T> Display for BinaryTree<T> where T:Display {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            BinaryTree::Leaf(t) => {write!(f, "{}", t)}
+            BinaryTree::Node(l, r) => {
+                let left =  format!("{}", l);
+                let right = format!("{}", r);
+                write!(f, "({},{})", left, right)
+            }   
+        }
+    }
+} 
 
 #[cfg(test)]
 mod tests {
@@ -125,8 +139,8 @@ mod tests {
     #[test]
     fn basic()
     {
-        let s = "((a,(d,e)),(bee,c))";
+        let s = "((a,(d,e)),(bee,c)) abcdefs";
         let tree=BinaryTree::<String>::from_string(s).unwrap();
-        dbg!(tree);
+        println!("{}",tree.0);
     }
 }
