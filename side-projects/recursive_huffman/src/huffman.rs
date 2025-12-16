@@ -19,13 +19,13 @@ use crate::tree::BinaryTree;
 #[derive(Eq, Debug)]
 pub enum HuffmanTree {
     Leaf(u8, u64),
-    Node(Box<HuffmanTree>, Box<HuffmanTree>),
+    Node(Box<HuffmanTree>, Box<HuffmanTree>, u64),
 }
 
 impl Ord for HuffmanTree {
     fn cmp(&self, other: &Self) -> cmp::Ordering {
-        let own_prob = self.get_probability();
-        let other_prob = other.get_probability();
+        let own_prob = self.get_frequency();
+        let other_prob = other.get_frequency();
 
         // We want to use the std heap, which is a max heap. However, we want to have
         // the minimum probability on top
@@ -51,8 +51,8 @@ impl PartialEq for HuffmanTree {
             (&HuffmanTree::Leaf(ref x1, ref prob1), &HuffmanTree::Leaf(ref x2, ref prob2)) => {
                 x1 == x2 && prob1 == prob2
             },
-            (&HuffmanTree::Node(ref zero1, ref one1), &HuffmanTree::Node(ref zero2, ref one2)) => {
-                zero1 == zero2 && one1 == one2
+            (&HuffmanTree::Node(ref zero1, ref one1, ref f1), &HuffmanTree::Node(ref zero2, ref one2, ref f2)) => {
+                zero1 == zero2 && one1 == one2 && f1==f2
             },
             _ => false
         }
@@ -72,16 +72,18 @@ impl HuffmanTree {
         while heap.len() > 2 {
             let a = heap.pop().unwrap();
             let b = heap.pop().unwrap();
+            let f = a.0.get_frequency() + b.0.get_frequency();
             let insert = if a < b {
-                HuffmanTree::Node(Box::new(a.0), Box::new(b.0))
+                HuffmanTree::Node(Box::new(a.0), Box::new(b.0),f)
             } else {
-                HuffmanTree::Node(Box::new(b.0), Box::new(a.0))
+                HuffmanTree::Node(Box::new(b.0), Box::new(a.0),f)
             };
             heap.push(Reverse(insert));
         }
         let a = heap.pop().unwrap();
         let b = heap.pop().unwrap();
-        HuffmanTree::Node(Box::new(a.0), Box::new(b.0))
+        let f = a.0.get_frequency() + b.0.get_frequency();
+        HuffmanTree::Node(Box::new(a.0), Box::new(b.0), f)
     }
 
     pub fn from_data(data: &[u8]) -> Self {
@@ -99,7 +101,7 @@ impl HuffmanTree {
         fn walker(table : &mut [u64;256], node : &HuffmanTree) {
             match node {
                 HuffmanTree::Leaf(chr, freq) => table[*chr as usize]=*freq,
-                HuffmanTree::Node(zero, one) => {
+                HuffmanTree::Node(zero, one, _) => {
                     walker(table, zero);
                     walker(table, one);
                 }
@@ -109,12 +111,10 @@ impl HuffmanTree {
         table
     }
 
-    fn get_probability(&self) -> u64 {
+    fn get_frequency(&self) -> u64 {
         match self {
-            &HuffmanTree::Leaf(_, prob) => prob as u64,
-            &HuffmanTree::Node(ref zero, ref one) => {
-                zero.get_probability() + one.get_probability()
-            }
+            &HuffmanTree::Leaf(_, freq) => freq as u64,
+            &HuffmanTree::Node(_, _, freq) => freq as u64
         }
     }
 
@@ -132,7 +132,7 @@ impl HuffmanTree {
                 &HuffmanTree::Leaf(ref elem, _) => {
                     table[*elem as usize] = prev;
                 },
-                &HuffmanTree::Node(ref zero, ref one) => {
+                &HuffmanTree::Node(ref zero, ref one, _) => {
                     let mut zero_bits = prev.clone();
                     zero_bits.push(false);
                     walker(zero, table, zero_bits);
@@ -151,7 +151,7 @@ impl HuffmanTree {
         fn walker(tree : HuffmanTree) -> BinaryTree<u8>{
             match tree {
                 HuffmanTree::Leaf(byte, _) => BinaryTree::Leaf(byte),
-                HuffmanTree::Node(l,r) => {
+                HuffmanTree::Node(l,r,_) => {
                     BinaryTree::Node(Box::new(walker(*l)), Box::new(walker(*r)))
                 }
             }
@@ -166,7 +166,7 @@ impl HuffmanTree {
             &HuffmanTree::Leaf(ref elem, _) => {
                 data.insert(*elem, prev);
             },
-            &HuffmanTree::Node(ref zero, ref one) => {
+            &HuffmanTree::Node(ref zero, ref one,_) => {
                 let mut zero_branch = prev.clone();
                 zero_branch.push(false);
                 zero.to_lookup_table_inner(data, zero_branch);
